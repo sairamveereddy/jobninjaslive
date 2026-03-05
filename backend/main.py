@@ -351,4 +351,7 @@ async def trigger_scrape():
     n = await run_scrape_cycle()
     return {"ok": True, "new_jobs": n}
 
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="static")
+# Only serve frontend when directory exists (local dev). On Railway we deploy backend only; Vercel serves frontend.
+_frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
+if os.path.isdir(_frontend_dir):
+    app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="static")
