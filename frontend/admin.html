@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jobNinjas Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p600:#7C3AED;--p700:#6D28D9;--p800:#5B21B6;--p900:#4C1D95;--o500:#F97316;--green:#10B981;--text:#1E1B2E;--tx2:#4B5563;--tx3:#9CA3AF;--bg:#F3F4F6;--radius:12px}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+
+/* Sidebar */
+.sidebar{width:240px;background:var(--p900);color:#fff;padding:24px 16px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:50}
+.sidebar .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;margin-bottom:32px;padding:0 4px}
+.sidebar .logo .dot{color:var(--o500);font-family:'JetBrains Mono',monospace}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;font-weight:600;font-size:14px;color:rgba(255,255,255,.7);cursor:pointer;transition:.2s;margin-bottom:4px}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.15);color:#fff}
+.nav-item .icon{font-size:18px;width:24px;text-align:center}
+.sidebar-divider{border-top:1px solid rgba(255,255,255,.1);margin:16px 0}
+.sidebar-bottom{margin-top:auto}
+.sidebar-bottom a{display:block;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.6);transition:.2s;border-radius:8px}
+.sidebar-bottom a:hover{color:#fff;background:rgba(255,255,255,.08)}
+
+/* Main */
+.main{margin-left:240px;flex:1;padding:32px}
+.main h1{font-size:24px;font-weight:800;margin-bottom:24px}
+
+/* Cards Grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card .label{font-size:12px;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.card .value{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--p700);margin-top:6px}
+
+/* Table */
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar input{padding:10px 16px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;width:280px}
+.toolbar input:focus{outline:none;border-color:var(--p600)}
+.filter-btns{display:flex;gap:6px}
+.f-btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;background:#fff;color:var(--tx2);border:1px solid #e5e7eb;transition:.2s}
+.f-btn:hover,.f-btn.active{background:var(--p600);color:#fff;border-color:var(--p600)}
+
+.table-wrap{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:var(--bg);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--tx3);text-align:left;padding:12px 16px;border-bottom:1px solid #e5e7eb}
+td{padding:12px 16px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+tr:hover{background:#fafafa}
+tr.warn{background:#FEF2F2}
+
+.badge{padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block}
+.badge-green{background:#D1FAE5;color:#065F46}
+.badge-red{background:#FEE2E2;color:#991B1B}
+.badge-yellow{background:#FEF3C7;color:#92400E}
+.badge-grey{background:#F3F4F6;color:#6B7280}
+.badge-purple{background:#EDE9FE;color:#5B21B6}
+
+.avatar-sm{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:8px}
+
+.act-btn{padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s}
+.act-grant{background:#D1FAE5;color:#065F46}.act-grant:hover{background:#A7F3D0}
+.act-revoke{background:#FEF3C7;color:#92400E}.act-revoke:hover{background:#FDE68A}
+.act-del{background:#FEE2E2;color:#991B1B}.act-del:hover{background:#FECACA}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px}
+.pg-btn{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;background:#fff;color:var(--tx2);border:1px solid #e5e7eb;cursor:pointer;transition:.2s}
+.pg-btn:hover{border-color:var(--p600)}
+.pg-btn.active{background:var(--p600);color:#fff;border-color:var(--p600)}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.source-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.src-card{background:#fff;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.src-card .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.src-card .name{font-weight:600;font-size:14px}
+.src-card .cnt{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--p700);margin-top:4px}
+
+.trigger-btn{padding:10px 24px;border-radius:10px;font-weight:700;font-size:14px;background:var(--p600);color:#fff;transition:.2s}
+.trigger-btn:hover{background:var(--p700)}
+
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">🥷 jobNinjas<span class="dot">.admin</span></div>
+  <div class="nav-item active" data-tab="overview" onclick="switchTab('overview')"><span class="icon">📊</span> Overview</div>
+  <div class="nav-item" data-tab="users" onclick="switchTab('users')"><span class="icon">👥</span> Users</div>
+  <div class="nav-item" data-tab="payments" onclick="switchTab('payments')"><span class="icon">💳</span> Payments</div>
+  <div class="nav-item" data-tab="jobs" onclick="switchTab('jobs')"><span class="icon">💼</span> Live Jobs</div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-bottom">
+    <a href="/">← Back to Site</a>
+    <a href="#" onclick="signOut()">Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <h1 id="pageTitle">Overview</h1>
+
+  <!-- Overview Tab -->
+  <div id="tab-overview">
+    <div class="cards" id="overviewCards"></div>
+  </div>
+
+  <!-- Users Tab -->
+  <div id="tab-users" class="hidden">
+    <div class="toolbar">
+      <input type="text" id="userSearch" placeholder="Search by name or email..." oninput="debouncedUserSearch()">
+      <div class="filter-btns">
+        <button class="f-btn active" data-f="all" onclick="setUserFilter('all')">All</button>
+        <button class="f-btn" data-f="paid" onclick="setUserFilter('paid')">Paid</button>
+        <button class="f-btn" data-f="free" onclick="setUserFilter('free')">Free</button>
+        <button class="f-btn" data-f="resume" onclick="setUserFilter('resume')">Has Resume</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>User</th><th>Email</th><th>Joined</th><th>Last Seen</th><th>Resume</th><th>Status</th><th>Actions</th>
+    </tr></thead><tbody id="usersBody"></tbody></table></div>
+    <div class="pagination" id="usersPag"></div>
+  </div>
+
+  <!-- Payments Tab -->
+  <div id="tab-payments" class="hidden">
+    <div class="toolbar">
+      <div class="filter-btns">
+        <button class="f-btn active" data-pf="all" onclick="setPayFilter('all')">All</button>
+        <button class="f-btn" data-pf="paid" onclick="setPayFilter('paid')">Paid</button>
+        <button class="f-btn" data-pf="failed" onclick="setPayFilter('failed')">Failed</button>
+        <button class="f-btn" data-pf="pending" onclick="setPayFilter('pending')">Pending</button>
+        <button class="f-btn" data-pf="refunded" onclick="setPayFilter('refunded')">Refunded</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>User</th><th>Email</th><th>Amount</th><th>Status</th><th>Date</th><th>DodoPayments ID</th>
+    </tr></thead><tbody id="paymentsBody"></tbody></table></div>
+    <div class="pagination" id="paymentsPag"></div>
+  </div>
+
+  <!-- Jobs Tab -->
+  <div id="tab-jobs" class="hidden">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <button class="trigger-btn" onclick="triggerScrape()">🔄 Trigger Scrape</button>
+      <span id="scrapeStatus" style="font-size:13px;color:var(--tx3)"></span>
+    </div>
+    <div class="source-cards" id="jobSourceCards"></div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>Title</th><th>Company</th><th>Source</th><th>Mode</th><th>Scraped</th><th>Expires</th><th>Hours Left</th><th>Link</th>
+    </tr></thead><tbody id="jobsBody"></tbody></table></div>
+    <div class="pagination" id="jobsPag"></div>
+  </div>
+</main>
+
+<script>
+let adminUser = null;
+let userPage = 1, userFilter = 'all', userSearchQ = '';
+let payPage = 1, payFilter = 'all';
+let jobPage = 1;
+let debounceTimer = null;
+
+async function init() {
+  try {
+    const me = await fetch('/auth/me', {credentials:'include'}).then(r=>r.json());
+    if (!me.is_admin) { window.location.href = '/'; return; }
+    adminUser = me;
+  } catch(e) {
+    window.location.href = '/';
+    return;
+  }
+  loadOverview();
+}
+
+async function signOut() {
+  await fetch('/auth/logout', {method:'POST', credentials:'include'});
+  window.location.href = '/';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.tab === tab));
+  ['overview','users','payments','jobs'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
+  });
+  const titles = {overview:'Overview', users:'Users', payments:'Payments', jobs:'Live Jobs'};
+  document.getElementById('pageTitle').textContent = titles[tab];
+  if (tab === 'overview') loadOverview();
+  if (tab === 'users') loadUsers();
+  if (tab === 'payments') loadPayments();
+  if (tab === 'jobs') loadJobs();
+}
+
+// ---- Overview ----
+async function loadOverview() {
+  try {
+    const d = await fetch('/admin/stats', {credentials:'include'}).then(r=>r.json());
+    const u = d.users, rv = d.revenue, j = d.jobs;
+    document.getElementById('overviewCards').innerHTML = [
+      {l:'Total Users', v:u.total}, {l:'Paid Users', v:u.paid},
+      {l:'Conversion %', v:u.conversion+'%'}, {l:'Total Revenue', v:'$'+rv.total_usd},
+      {l:'Revenue 30d', v:'$'+rv.last_30d_usd}, {l:'Live Jobs', v:j.live},
+      {l:'With Resume', v:u.with_resume}, {l:'New This Week', v:u.new_7d},
+    ].map(c => `<div class="card"><div class="label">${c.l}</div><div class="value">${c.v}</div></div>`).join('');
+  } catch(e) {
+    document.getElementById('overviewCards').innerHTML = '<p style="color:var(--tx3)">Failed to load stats</p>';
+  }
+}
+
+// ---- Users ----
+function debouncedUserSearch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { userSearchQ = document.getElementById('userSearch').value; userPage = 1; loadUsers(); }, 400);
+}
+function setUserFilter(f) {
+  userFilter = f; userPage = 1;
+  document.querySelectorAll('[data-f]').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  loadUsers();
+}
+async function loadUsers() {
+  try {
+    const p = new URLSearchParams({page:userPage, per:30, filter:userFilter});
+    if (userSearchQ) p.set('search', userSearchQ);
+    const d = await fetch('/admin/users?'+p, {credentials:'include'}).then(r=>r.json());
+    document.getElementById('usersBody').innerHTML = d.users.map(u => `<tr>
+      <td>${u.avatar_url ? `<img class="avatar-sm" src="${u.avatar_url}" onerror="this.style.display='none'">` : ''}${esc(u.name)}</td>
+      <td>${esc(u.email)}</td>
+      <td>${fmtDate(u.created_at)}</td>
+      <td>${fmtDate(u.last_seen)}</td>
+      <td>${u.resume_title ? esc(u.resume_title) : '<span style="color:var(--tx3)">—</span>'}</td>
+      <td>${u.is_paid ? '<span class="badge badge-green">PRO</span>' : '<span class="badge badge-grey">Free</span>'}</td>
+      <td>
+        ${u.is_paid
+          ? `<button class="act-btn act-revoke" onclick="revokeUser('${u.id}')">Revoke</button>`
+          : `<button class="act-btn act-grant" onclick="grantUser('${u.id}')">Grant</button>`}
+        <button class="act-btn act-del" onclick="deleteUser('${u.id}','${esc(u.email)}')">Delete</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--tx3);padding:40px">No users found</td></tr>';
+    renderPag('usersPag', d.total, 30, userPage, p => { userPage=p; loadUsers(); });
+  } catch(e) {}
+}
+async function grantUser(id) {
+  await fetch(`/admin/users/${id}/grant`, {method:'POST', credentials:'include'});
+  loadUsers();
+}
+async function revokeUser(id) {
+  await fetch(`/admin/users/${id}/revoke`, {method:'POST', credentials:'include'});
+  loadUsers();
+}
+async function deleteUser(id, email) {
+  if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
+  await fetch(`/admin/users/${id}`, {method:'DELETE', credentials:'include'});
+  loadUsers();
+}
+
+// ---- Payments ----
+function setPayFilter(f) {
+  payFilter = f; payPage = 1;
+  document.querySelectorAll('[data-pf]').forEach(b => b.classList.toggle('active', b.dataset.pf === f));
+  loadPayments();
+}
+async function loadPayments() {
+  try {
+    const p = new URLSearchParams({page:payPage, per:30, status:payFilter});
+    const d = await fetch('/admin/payments?'+p, {credentials:'include'}).then(r=>r.json());
+    const statusBadge = s => ({paid:'badge-green',failed:'badge-red',pending:'badge-yellow',refunded:'badge-grey'}[s]||'badge-grey');
+    document.getElementById('paymentsBody').innerHTML = d.payments.map(p => `<tr>
+      <td>${p.user_avatar ? `<img class="avatar-sm" src="${p.user_avatar}" onerror="this.style.display='none'">` : ''}${esc(p.user_name)}</td>
+      <td>${esc(p.user_email)}</td>
+      <td class="mono">$${p.amount_usd}</td>
+      <td><span class="badge ${statusBadge(p.status)}">${p.status}</span></td>
+      <td>${fmtDate(p.created_at)}</td>
+      <td style="font-size:12px;color:var(--tx3);max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(p.dodo_id)}</td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:40px">No payments found</td></tr>';
+    renderPag('paymentsPag', d.total, 30, payPage, p => { payPage=p; loadPayments(); });
+  } catch(e) {}
+}
+
+// ---- Jobs ----
+async function loadJobs() {
+  try {
+    const stats = await fetch('/api/stats').then(r=>r.json());
+    document.getElementById('jobSourceCards').innerHTML = (stats.sources||[]).map(s =>
+      `<div class="src-card"><div><span class="dot" style="background:${s.color}"></span><span class="name">${esc(s.name)}</span></div><div class="cnt">${s.count}</div></div>`
+    ).join('');
+
+    const p = new URLSearchParams({page:jobPage, per:30});
+    const d = await fetch('/api/jobs?'+p, {credentials:'include'}).then(r=>r.json());
+    document.getElementById('jobsBody').innerHTML = d.jobs.map(j => {
+      const warn = j.hours_left < 2;
+      return `<tr class="${warn?'warn':''}">
+        <td><strong>${esc(j.title)}</strong></td>
+        <td>${esc(j.company)}</td>
+        <td><span class="badge badge-purple">${esc(j.source)}</span></td>
+        <td>${esc(j.work_mode)}</td>
+        <td>${fmtDate(j.scraped_at)}</td>
+        <td class="mono" style="font-size:12px">${fmtDate(j.scraped_at)}</td>
+        <td class="mono ${warn?'':''}"><span class="badge ${warn?'badge-red':'badge-green'}">${j.hours_left}h</span></td>
+        <td><a href="${esc(j.url)}" target="_blank" style="color:var(--p600);font-weight:600;font-size:13px">Open ↗</a></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:40px">No jobs</td></tr>';
+    renderPag('jobsPag', d.total, 30, jobPage, p => { jobPage=p; loadJobs(); });
+  } catch(e) {}
+}
+
+async function triggerScrape() {
+  const el = document.getElementById('scrapeStatus');
+  el.textContent = 'Scraping...';
+  try {
+    const d = await fetch('/admin/scrape', {method:'POST', credentials:'include'}).then(r=>r.json());
+    el.textContent = `Done! ${d.new_jobs} new jobs added.`;
+    loadJobs();
+    loadOverview();
+  } catch(e) {
+    el.textContent = 'Scrape failed.';
+  }
+}
+
+// ---- Utils ----
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'});
+}
+
+function renderPag(id, total, per, current, cb) {
+  const pages = Math.ceil(total / per);
+  const el = document.getElementById(id);
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = `<button class="pg-btn" onclick="void(0)" ${current===1?'disabled':''}>‹</button>`;
+  const s = Math.max(1, current-2), e = Math.min(pages, s+4);
+  for (let i=s;i<=e;i++) html += `<button class="pg-btn ${i===current?'active':''}">${i}</button>`;
+  html += `<button class="pg-btn" ${current===pages?'disabled':''}>›</button>`;
+  el.innerHTML = html;
+  el.querySelectorAll('.pg-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const txt = b.textContent.trim();
+      if (txt === '‹') cb(Math.max(1, current-1));
+      else if (txt === '›') cb(Math.min(pages, current+1));
+      else cb(parseInt(txt));
+    });
+  });
+}
+
+init();
+</script>
+</body>
+</html>

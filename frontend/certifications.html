@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jobNinjas.live — Certifications & Courses</title>
+<link rel="icon" type="image/png" href="jobninjas-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g50:#ECFDF5;--g100:#D1FAE5;--g200:#A7F3D0;--g300:#6EE7B7;
+  --g400:#34D399;--g500:#10B981;--g600:#059669;--g700:#047857;--g800:#065F46;--g900:#064E3B;
+  --dark:#111827;--dark2:#1F2937;--dark3:#374151;
+  --text:#111827;--tx2:#4B5563;--tx3:#9CA3AF;--tx4:#D1D5DB;
+  --bg:#F3F4F6;--white:#FFFFFF;--border:#E5E7EB;--border2:#D1D5DB;
+  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;background:none}
+.mono{font-family:'JetBrains Mono',monospace}
+
+.topnav{background:var(--white);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
+.topnav-left{display:flex;align-items:center;gap:32px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.3px}
+.logo-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.logo-icon img{width:100%;height:100%;object-fit:contain;display:block}
+.logo-text{display:flex;flex-direction:column;gap:2px}
+.brand-main{color:#05c38f;font-weight:800;font-size:18px}
+.brand-by{color:var(--tx3);font-weight:500;font-size:11px}
+.topnav-links{display:flex;align-items:center;gap:6px}
+.topnav-links a{font-weight:500;color:var(--tx2);font-size:13px;padding:6px 12px;border-radius:6px;transition:.15s}
+.topnav-links a:hover{background:var(--g50);color:var(--g700)}
+.topnav-links a.active{background:var(--g50);color:var(--g700);font-weight:600}
+.topnav-right{display:flex;align-items:center;gap:10px}
+.btn{padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-green{background:var(--g600);color:#fff}.btn-green:hover{background:var(--g700)}
+.btn-outline{border:1px solid var(--border);color:var(--tx2);background:var(--white)}.btn-outline:hover{border-color:var(--g400);color:var(--g700)}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+.app{display:flex;min-height:calc(100vh - 56px)}
+.sidebar{width:240px;background:var(--dark);color:#fff;display:flex;flex-direction:column;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0}
+.sidebar-section{padding:16px 16px 8px}
+.sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin-bottom:10px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:.15s;margin-bottom:2px}
+.sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-item.active{background:var(--g600);color:#fff;font-weight:600}
+.sidebar-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-divider{border-top:1px solid rgba(255,255,255,.08);margin:8px 16px}
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:var(--tx3)}
+
+.main{flex:1;padding:24px 28px;min-width:0}
+.page-header h1{font-size:22px;font-weight:800;margin-bottom:4px}
+.page-header p{font-size:13px;color:var(--tx3)}
+
+.chips{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:2px;margin:12px 0 8px}
+.chips::-webkit-scrollbar{height:4px}
+.chips::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
+.chip{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;background:var(--bg);color:var(--tx2);cursor:pointer;transition:.15s;border:1px solid var(--border);white-space:nowrap}
+.chip:hover,.chip.active{background:var(--g600);color:#fff;border-color:var(--g600)}
+
+.search-row{display:flex;gap:10px;margin-bottom:10px}
+.search-input{flex:1;position:relative}
+.search-input input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--white);transition:.15s}
+.search-input input:focus{border-color:var(--g400);box-shadow:0 0 0 3px rgba(16,185,129,.1);outline:none}
+.search-input .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px}
+
+.filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:12px}
+.filter-select{padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--white);color:var(--tx2);cursor:pointer}
+.filter-select:focus{border-color:var(--g400);outline:none}
+
+.tab-row{display:flex;gap:8px;margin:8px 0 12px}
+.tab-btn{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--white);border:1px solid var(--border);color:var(--tx2);cursor:pointer;transition:.15s}
+.tab-btn.active{background:var(--g600);border-color:var(--g600);color:#fff}
+
+.feed-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px;color:var(--tx3)}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:flex-start}
+@media(max-width:1200px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:6px}
+.card-title{font-size:14px;font-weight:700;color:var(--text)}
+.card-provider{font-size:12px;color:var(--tx2)}
+.card-meta{font-size:11px;color:var(--tx3)}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pill{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:600;background:var(--bg);color:var(--tx2);border:1px solid var(--border)}
+.pill.price-free{background:var(--g50);color:var(--g700);border-color:var(--g200)}
+.pill.price-paid{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.card-footer{margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--tx3)}
+.card-footer a{font-size:11px}
+
+.skeleton{background:linear-gradient(90deg,var(--bg) 25%,var(--border) 50%,var(--bg) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:10px;height:110px}
+@keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:16px}
+.page-btn{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;background:var(--white);color:var(--tx2);border:1px solid var(--border);transition:.15s}
+.page-btn:hover{border-color:var(--g400)}
+.page-btn.active{background:var(--g600);color:#fff;border-color:var(--g600)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.page-info{font-size:12px;color:var(--tx3);margin:0 10px}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-left">
+    <a href="/" class="logo">
+      <div class="logo-icon"><img src="jobninjas-logo.png" alt="logo"></div>
+      <div class="logo-text">
+        <span class="brand-main">jobNinjas.live</span>
+        <span class="brand-by">by jobNinjas.ai</span>
+      </div>
+    </a>
+    <div class="topnav-links">
+      <a href="/"                >🔍 Job Board</a>
+      <a href="/certifications.html" class="active">🎓 Certifications</a>
+      <a href="https://jobninjas.ai" target="_blank">🤖 AI Resume</a>
+      <a href="https://jobninjas.ai" target="_blank">📝 ATS Scanner</a>
+      <a href="https://jobninjas.ai" target="_blank">💼 Products</a>
+    </div>
+  </div>
+  <div class="topnav-right">
+    <button onclick="window.location.href='/auth/google'" class="btn btn-green btn-sm">Sign in with Google</button>
+  </div>
+</nav>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <a href="/" class="sidebar-item"><span class="icon">🔍</span> Jobs / Job Search</a>
+      <div class="sidebar-item active"><span class="icon">🎓</span> Certifications</div>
+      <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">📄</span> Resume Scanner</a>
+      <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">🤖</span> AI Ninja</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-footer">
+      <div>Apply Smarter, Land Faster</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>Certifications & Courses</h1>
+      <p id="headerInfo">Discover certs and courses that match your role.</p>
+    </div>
+
+    <div class="chips">
+      <button class="chip" onclick="quickFilter('AI / Machine Learning')">AI / ML</button>
+      <button class="chip" onclick="quickFilter('Software Engineering')">Software Engineer</button>
+      <button class="chip" onclick="quickFilter('Cloud')">Cloud / DevOps</button>
+      <button class="chip" onclick="quickFilter('Cybersecurity')">Security</button>
+      <button class="chip" onclick="quickFilter('Data')">Data / Analytics</button>
+      <button class="chip" onclick="quickFilter('Public Health')">Public Health</button>
+      <button class="chip" onclick="quickFilter('Physiotherapy')">Physiotherapy</button>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" data-tab="certs" onclick="switchTab('certs')">Certifications</button>
+      <button class="tab-btn" data-tab="courses" onclick="switchTab('courses')">Courses (coming soon)</button>
+    </div>
+
+    <div class="search-row">
+      <div class="search-input">
+        <span class="search-icon">🔍</span>
+        <input id="searchQ" placeholder="Search certifications by name, provider, or skill..." onkeydown="if(event.key==='Enter')fetchCerts()">
+      </div>
+      <button class="btn btn-green" onclick="fetchCerts()">Search</button>
+    </div>
+
+    <div class="filter-row">
+      <select id="filterProvider" class="filter-select" onchange="fetchCerts()">
+        <option value="">All providers</option>
+        <option>Google</option>
+        <option>Amazon Web Services</option>
+        <option>IBM</option>
+        <option>DeepLearning.AI</option>
+        <option>Coursera</option>
+      </select>
+      <select id="filterPrice" class="filter-select" onchange="fetchCerts()">
+        <option value="">All prices</option>
+        <option value="free">Free only</option>
+        <option value="paid">Paid</option>
+      </select>
+      <select id="filterLevel" class="filter-select" onchange="fetchCerts()">
+        <option value="">All levels</option>
+        <option>Beginner</option>
+        <option>Intermediate</option>
+        <option>Advanced</option>
+      </select>
+      <select id="filterMode" class="filter-select" onchange="fetchCerts()">
+        <option value="">Any mode</option>
+        <option>Online</option>
+        <option>On-site</option>
+        <option>Hybrid</option>
+      </select>
+    </div>
+
+    <div class="feed-info">
+      <span id="feedInfo">Loading certifications...</span>
+    </div>
+
+    <div id="certList"></div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+</div>
+
+<script>
+let currentPage = 1;
+let totalPages = 1;
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===tab);
+  });
+  // For now only certs are implemented.
+}
+
+function quickFilter(text){
+  document.getElementById('searchQ').value = text;
+  currentPage = 1;
+  fetchCerts();
+}
+
+async function fetchCerts(page){
+  if(page){ currentPage = page; }
+  const list = document.getElementById('certList');
+  list.innerHTML = '<div class="grid">' + Array(6).fill('<div class="skeleton"></div>').join('') + '</div>';
+
+  const params = new URLSearchParams();
+  const q = document.getElementById('searchQ').value.trim();
+  if(q) params.set('q', q);
+  const provider = document.getElementById('filterProvider').value;
+  if(provider) params.set('provider', provider);
+  const price = document.getElementById('filterPrice').value;
+  if(price) params.set('price', price);
+  const level = document.getElementById('filterLevel').value;
+  if(level) params.set('level', level);
+  const mode = document.getElementById('filterMode').value;
+  if(mode) params.set('mode', mode);
+  params.set('page', currentPage);
+  params.set('per', 18);
+
+  try{
+    const d = await fetch('/api/certs?'+params.toString()).then(r=>r.json());
+    renderCerts(d.certs || []);
+    totalPages = d.pages || 1;
+    document.getElementById('feedInfo').textContent =
+      d.total ? `Showing ${(currentPage-1)*18+1}–${Math.min(currentPage*18,d.total)} of ${d.total} certifications` :
+                'No certifications found for these filters.';
+    renderPagination(d.total || 0, 18);
+  }catch(e){
+    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Failed to load certifications. Server may be starting up...</p>';
+  }
+}
+
+function renderCerts(items){
+  const list = document.getElementById('certList');
+  if(!items.length){
+    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:60px 0">No certifications found.</p>';
+    return;
+  }
+  let html = '<div class="grid">';
+  items.forEach(c=>{
+    const free = c.price_type === 'free' || (c.price_text||'').toLowerCase().includes('free');
+    html += `<div class="card">
+      <div class="card-title">${esc(c.title)}</div>
+      <div class="card-provider">${esc(c.provider || c.source || '')}</div>
+      <div class="card-meta">${esc(c.category || '')}${c.level ? ' • '+esc(c.level) : ''}</div>
+      <div class="pill-row">
+        ${c.duration ? `<span class="pill">${esc(c.duration)}</span>` : ''}
+        ${c.mode ? `<span class="pill">${esc(c.mode)}</span>` : ''}
+        ${c.price_text ? `<span class="pill ${free?'price-free':'price-paid'}">${esc(c.price_text)}</span>` : ''}
+      </div>
+      <div class="card-footer">
+        <span>${c.hours_left != null ? `${c.hours_left}h left` : ''}</span>
+        <a href="${esc(c.url)}" target="_blank" class="btn btn-green btn-sm" style="padding:4px 10px;font-size:11px;border-radius:6px">View</a>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function renderPagination(total, per){
+  const pg = document.getElementById('pagination');
+  if(!total || total <= per){ pg.innerHTML=''; return; }
+  let html = `<button class="page-btn" onclick="fetchCerts(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  const maxPages = Math.max(1, Math.ceil(total/per));
+  const start = Math.max(1, currentPage-2);
+  const end = Math.min(maxPages, start+4);
+  for(let i=start;i<=end;i++){
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="fetchCerts(${i})">${i}</button>`;
+  }
+  html += `<span class="page-info">${currentPage} / ${maxPages}</span>`;
+  html += `<button class="page-btn" onclick="fetchCerts(${currentPage+1})" ${currentPage===maxPages?'disabled':''}>›</button>`;
+  pg.innerHTML = html;
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+fetchCerts();
+</script>
+</body>
+</html>
+
