@@ -9,3 +9,10 @@
   status = 200
   force = true
 
+# Proxy auth routes to backend (Google OAuth, etc.)
+[[redirects]]
+  from = "/auth/*"
+  to = "https://jobninjaslive-production.up.railway.app/auth/:splat"
+  status = 200
+  force = true
+
