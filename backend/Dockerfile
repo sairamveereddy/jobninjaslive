@@ -1,5 +1,6 @@
 # Use Playwright image so Chromium is available for LinkedIn, Indeed, Dice, ZipRecruiter, Monster, Glassdoor
-FROM mcr.microsoft.com/playwright/python:v1.49.0-noble
+# Match the Playwright runtime version (v1.56.0) that Scrapling/patchright expects.
+FROM mcr.microsoft.com/playwright/python:v1.56.0-noble
 
 WORKDIR /app
 
