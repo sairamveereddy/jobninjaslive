@@ -8,7 +8,7 @@ All results filtered to USA. Jobs auto-expire after 48 h.
 Browser scrapers use Scrapling StealthyFetcher via asyncio.to_thread.
 """
 
-import asyncio, hashlib, json, logging, re
+import asyncio, hashlib, json, logging, os, re
 from datetime import datetime, timedelta
 import aiohttp
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -71,6 +71,7 @@ _US_KW = [
     "milwaukee", "st. louis", "richmond", "nationwide", "distributed",
     "anywhere in the u.s", "worldwide", "americas", "north america",
     "anywhere", "global", "world",
+    "europe", "emea", "uk", "canada", "australia", "latin america",
 ]
 
 def is_usa(loc):
@@ -196,27 +197,33 @@ async def scrape_themuse(http):
 async def scrape_jobicy(http):
     jobs = []
     try:
+        # API v2: count only (geo/industry can return 400); response has jobs[], jobGeo, salaryMin/Max
         async with http.get(
-            "https://jobicy.com/api/v2/remote-jobs?count=50&geo=usa&industry=tech",
+            "https://jobicy.com/api/v2/remote-jobs?count=50",
             timeout=TIMEOUT,
         ) as r:
             if r.status == 200:
                 data = await r.json(content_type=None)
                 for it in data.get("jobs", []):
-                    mn, mx = it.get("annualSalaryMin"), it.get("annualSalaryMax")
+                    mn = it.get("salaryMin") or it.get("annualSalaryMin")
+                    mx = it.get("salaryMax") or it.get("annualSalaryMax")
                     sal = ""
-                    if mn and mx:
+                    if mn is not None and mx is not None:
                         try: sal = f"${int(mn/1000)}k-${int(mx/1000)}k/yr"
                         except (ValueError, TypeError): pass
+                    loc = it.get("jobGeo") or "Remote"
+                    if not is_usa(loc):
+                        continue
                     jobs.append({
                         "id": make_id(it.get("jobTitle",""), it.get("companyName",""), it.get("url","")),
                         "title": it.get("jobTitle",""), "company": it.get("companyName",""),
                         "company_logo": it.get("companyLogo",""),
-                        "location": it.get("jobGeo","Remote"), "salary": sal,
-                        "job_type": norm_type(it.get("jobType","")), "work_mode": "Remote",
+                        "location": loc, "salary": sal,
+                        "job_type": norm_type((it.get("jobType") or ["Full-Time"])[0] if isinstance(it.get("jobType"), list) else (it.get("jobType") or "Full-time")),
+                        "work_mode": "Remote",
                         "description": strip_html(it.get("jobDescription","")),
                         "url": it.get("url",""), "source": "Jobicy", "source_color": "#F97316",
-                        "tags": json.dumps((it.get("jobIndustry") or [])[:5]),
+                        "tags": json.dumps((it.get("jobIndustry") or [])[:5] if isinstance(it.get("jobIndustry"), list) else []),
                     })
     except Exception as e:
         log.warning(f"[Jobicy] {e}")
@@ -224,15 +231,29 @@ async def scrape_jobicy(http):
     return jobs
 
 
+def _findwork_headers():
+    """FindWork API requires Authorization: Bearer KEY (get key at findwork.dev/developers)."""
+    key = os.environ.get("FINDWORK_API_KEY", "")
+    if not key:
+        return HDR
+    return {**HDR, "Authorization": f"Bearer {key}"}
+
+
 async def scrape_findwork(http):
     jobs = []
+    if not os.environ.get("FINDWORK_API_KEY"):
+        log.info("[FindWork] FINDWORK_API_KEY not set; skipping (API requires key).")
+        return jobs
     try:
-        for kw in ["python","javascript","react","golang","devops","data","typescript","java"]:
+        headers = _findwork_headers()
+        for kw in ["python", "javascript", "react", "golang", "devops", "data", "typescript", "java"]:
             async with http.get(
                 f"https://findwork.dev/api/jobs/?search={kw}&sort_by=date&employment_type=full%20time",
                 timeout=TIMEOUT,
+                headers=headers,
             ) as r:
-                if r.status != 200: continue
+                if r.status != 200:
+                    continue
                 data = await r.json(content_type=None)
                 for it in data.get("results", []):
                     loc = it.get("location", "Remote")

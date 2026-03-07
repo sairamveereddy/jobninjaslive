@@ -1,0 +1,5 @@
+# Force Docker build so Chromium (Playwright) is available.
+# Required for: LinkedIn, Indeed, Dice, ZipRecruiter, Monster, Glassdoor.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
