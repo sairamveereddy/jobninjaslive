@@ -713,6 +713,8 @@ function updateSourceCheckboxes() {
 // ---- Fetch Jobs ----
 async function fetchJobs() {
   const list = document.getElementById('jobList');
+  const feedInfo = document.getElementById('feedInfo');
+  feedInfo.textContent = 'Loading jobs… (first load may take up to 90s)';
   list.innerHTML = `<div class="job-grid">` + Array(6).fill('<div class="skeleton"></div>').join('') + `</div>`;
 
   const params = new URLSearchParams();
@@ -726,9 +728,24 @@ async function fetchJobs() {
   params.set('page', currentPage);
   params.set('per', PER_PAGE);
 
+  async function doFetch() {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 90000);
+    const r = await fetch(`/api/jobs?${params}`, { credentials: 'include', signal: ctrl.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
   try {
-    const r = await fetch(`/api/jobs?${params}`, { credentials: 'include' });
-    const d = await r.json();
+    let d;
+    try {
+      d = await doFetch();
+    } catch (err) {
+      document.getElementById('feedInfo').textContent = 'First load can take a moment…';
+      list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Loading jobs… (first load may take 30–60s)</p>';
+      await new Promise(r => setTimeout(r, 3000));
+      d = await doFetch();
+    }
     totalJobs = d.total;
     totalPages = d.pages;
 
@@ -740,7 +757,7 @@ async function fetchJobs() {
     renderPagination();
     document.getElementById('feedInfo').textContent = `Showing ${(currentPage-1)*PER_PAGE+1}–${Math.min(currentPage*PER_PAGE, totalJobs)} of ${totalJobs.toLocaleString()} jobs`;
   } catch(e) {
-    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Failed to load jobs. Server may be starting up...</p>';
+    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Failed to load jobs. <a href="javascript:location.reload()" style="color:var(--g600)">Refresh the page</a> to try again.</p>';
   }
 }
 
