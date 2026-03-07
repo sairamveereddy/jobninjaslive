@@ -29,7 +29,15 @@ scheduler = create_scheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    asyncio.create_task(run_scrape_cycle())
+    # Run first scrape before accepting traffic so deployed app has jobs immediately
+    try:
+        log.info("Running initial job scrape (blocking until done or timeout)...")
+        n = await asyncio.wait_for(run_scrape_cycle(), timeout=180.0)
+        log.info("Initial scrape finished: %s new jobs.", n)
+    except asyncio.TimeoutError:
+        log.warning("Initial scrape timed out after 180s; scheduler will retry every 5 min.")
+    except Exception as e:
+        log.exception("Initial scrape failed: %s; scheduler will retry every 5 min.", e)
     scheduler.start()
     yield
     scheduler.shutdown()

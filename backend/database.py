@@ -22,7 +22,11 @@ def _default_sqlite_url() -> str:
     return f"sqlite+aiosqlite:///{uri_path}"
 
 
-DATABASE_URL = os.getenv("DATABASE_URL", _default_sqlite_url())
+_raw_url = os.getenv("DATABASE_URL", _default_sqlite_url())
+# Railway Postgres gives postgresql://; async engine needs postgresql+asyncpg://
+if _raw_url.startswith("postgresql://") and "+" not in _raw_url.split("?")[0]:
+    _raw_url = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+DATABASE_URL = _raw_url
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

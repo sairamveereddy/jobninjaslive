@@ -69,7 +69,8 @@ _US_KW = [
     "tampa", "orlando", "san diego", "san jose", "sacramento", "las vegas",
     "detroit", "cincinnati", "cleveland", "kansas city", "indianapolis",
     "milwaukee", "st. louis", "richmond", "nationwide", "distributed",
-    "anywhere in the u.s",
+    "anywhere in the u.s", "worldwide", "americas", "north america",
+    "anywhere", "global", "world",
 ]
 
 def is_usa(loc):
@@ -770,6 +771,7 @@ async def scrape_glassdoor():
 
 async def _run_browser_scrapers():
     if not _browser_available():
+        log.info("[Browser] Scrapers skipped (no browser/Scrapling); using API sources only.")
         return []
     all_jobs = []
     scrapers = [
