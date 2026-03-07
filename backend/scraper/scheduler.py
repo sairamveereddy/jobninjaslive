@@ -792,42 +792,26 @@ async def _run_browser_scrapers():
 #  SCRAPE CYCLE
 # ═══════════════════════════════════════════════════════════════════
 
-async def run_scrape_cycle() -> int:
-    log.info(f"[Cycle] Starting {datetime.utcnow().isoformat()}")
+async def _api_group():
+    """Run all 6 API scrapers (Remotive, Arbeitnow, The Muse, Jobicy, FindWork, Greenhouse)."""
+    async with aiohttp.ClientSession(headers=HDR) as http:
+        results = await asyncio.gather(
+            scrape_remotive(http), scrape_arbeitnow(http),
+            scrape_themuse(http), scrape_jobicy(http),
+            scrape_findwork(http), scrape_greenhouse(http),
+            return_exceptions=True,
+        )
+    out = []
+    for r in results:
+        if isinstance(r, list):
+            out.extend(r)
+        elif isinstance(r, Exception):
+            log.error(f"API scraper error: {r}")
+    return out
 
-    async def _api_group():
-        async with aiohttp.ClientSession(headers=HDR) as http:
-            results = await asyncio.gather(
-                scrape_remotive(http), scrape_arbeitnow(http),
-                scrape_themuse(http), scrape_jobicy(http),
-                scrape_findwork(http), scrape_greenhouse(http),
-                return_exceptions=True,
-            )
-        out = []
-        for r in results:
-            if isinstance(r, list):
-                out.extend(r)
-            elif isinstance(r, Exception):
-                log.error(f"API scraper error: {r}")
-        return out
 
-    api_future = _api_group()
-    browser_future = _run_browser_scrapers()
-
-    api_jobs, browser_jobs = await asyncio.gather(
-        api_future, browser_future, return_exceptions=True,
-    )
-
-    all_jobs = []
-    if isinstance(api_jobs, list):
-        all_jobs.extend(api_jobs)
-    elif isinstance(api_jobs, Exception):
-        log.error(f"API group: {api_jobs}")
-    if isinstance(browser_jobs, list):
-        all_jobs.extend(browser_jobs)
-    elif isinstance(browser_jobs, Exception):
-        log.error(f"Browser group: {browser_jobs}")
-
+async def _save_jobs_to_db(all_jobs: list) -> int:
+    """Dedupe, filter USA, purge expired, insert/refresh. Returns new_count."""
     usa_jobs = [j for j in all_jobs if is_usa(j.get("location", ""))]
     log.info(f"[Cycle] {len(all_jobs)} raw -> {len(usa_jobs)} USA")
 
@@ -853,7 +837,6 @@ async def run_scrape_cycle() -> int:
                 continue
             existing = await db.get(Job, jid)
             if existing:
-                # Keep original scraped_at so we know when it first appeared.
                 existing.expires_at = now + timedelta(hours=48)
                 if j.get("salary") and not existing.salary:
                     existing.salary = j["salary"]
@@ -886,6 +869,36 @@ async def run_scrape_cycle() -> int:
 
     log.info(f"[Cycle] +{new_count} new, ~{refreshed} refreshed, -{purged} expired")
     return new_count
+
+
+async def run_api_only_cycle() -> int:
+    """Run only API scrapers (no browser). Use at startup so all 6 API sources fill quickly."""
+    log.info("[API-only] Starting")
+    api_jobs = await _api_group()
+    return await _save_jobs_to_db(api_jobs)
+
+
+async def run_scrape_cycle() -> int:
+    log.info(f"[Cycle] Starting {datetime.utcnow().isoformat()}")
+
+    api_future = _api_group()
+    browser_future = _run_browser_scrapers()
+
+    api_jobs, browser_jobs = await asyncio.gather(
+        api_future, browser_future, return_exceptions=True,
+    )
+
+    all_jobs = []
+    if isinstance(api_jobs, list):
+        all_jobs.extend(api_jobs)
+    elif isinstance(api_jobs, Exception):
+        log.error(f"API group: {api_jobs}")
+    if isinstance(browser_jobs, list):
+        all_jobs.extend(browser_jobs)
+    elif isinstance(browser_jobs, Exception):
+        log.error(f"Browser group: {browser_jobs}")
+
+    return await _save_jobs_to_db(all_jobs)
 
 
 # ═══════════════════════════════════════════════════════════════════

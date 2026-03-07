@@ -21,7 +21,7 @@ from payments import router as pay_router
 from admin import router as admin_router
 from resume_parser import parse_resume
 from job_matcher import rank_jobs
-from scraper.scheduler import run_scrape_cycle, create_scheduler
+from scraper.scheduler import run_scrape_cycle, run_api_only_cycle, create_scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 log = logging.getLogger("jobninjas")
@@ -116,23 +116,34 @@ async def seed_remotive_jobs() -> int:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    # Guarantee jobs: seed from Remotive first (single fast request)
+    # 1) Seed Remotive (fast, guarantees some jobs)
     try:
         n = await asyncio.wait_for(seed_remotive_jobs(), timeout=45.0)
         if n:
             log.info("Seed finished: %s jobs in DB.", n)
     except Exception as e:
         log.warning("Seed failed: %s", e)
-    # Then run full scrape to add more sources
+    # 2) API-only cycle: all 6 API sources (Arbeitnow, The Muse, Jobicy, FindWork, Greenhouse + Remotive)
     try:
-        log.info("Running full job scrape (blocking until done or timeout)...")
-        n = await asyncio.wait_for(run_scrape_cycle(), timeout=180.0)
-        log.info("Full scrape finished: %s new jobs.", n)
+        log.info("Running API-only scrape (all 6 API sources)...")
+        n = await asyncio.wait_for(run_api_only_cycle(), timeout=120.0)
+        log.info("API-only scrape finished: %s new/refreshed jobs.", n)
     except asyncio.TimeoutError:
-        log.warning("Full scrape timed out after 180s; scheduler will retry every 5 min.")
+        log.warning("API-only scrape timed out after 120s.")
     except Exception as e:
-        log.exception("Full scrape failed: %s; scheduler will retry every 5 min.", e)
+        log.exception("API-only scrape failed: %s", e)
+    # 3) Start scheduler (full cycle every 5 min, includes browser sources)
     scheduler.start()
+    # 4) Run one full cycle in background (LinkedIn, Indeed, Dice, etc. — needs Chromium/Docker)
+    async def _first_full_cycle():
+        try:
+            log.info("Running first full scrape (API + browser) in background...")
+            await asyncio.wait_for(run_scrape_cycle(), timeout=600.0)
+        except asyncio.TimeoutError:
+            log.warning("First full scrape timed out; scheduler will retry every 5 min.")
+        except Exception as e:
+            log.warning("First full scrape failed: %s; scheduler will retry.", e)
+    asyncio.create_task(_first_full_cycle())
     yield
     scheduler.shutdown()
 

@@ -23,6 +23,7 @@ git push origin main
 
 ## After push
 - **Railway** (backend): Redeploys from `main`. Ensure env vars are set: `DODO_API_KEY`, `DODO_PRODUCT_ID`, `ADMIN_EMAIL`, etc. `DODO_WEBHOOK_SECRET` is optional.
+  - **All job sources (incl. LinkedIn, Indeed, etc.)**: Railway must build with **Docker**. If your service root is the **repo root**, the root `Dockerfile` (Playwright/Chromium image) is used. If root is `backend`, use `backend/Dockerfile`. Without Docker, only API sources run; browser sources need Chromium.
 - **Netlify** (frontend): If connected to this repo, it will deploy. Proxies for `/api/*`, `/auth/*`, `/payments/*` are in `frontend/netlify.toml`.
 
 ## Optional: add README
