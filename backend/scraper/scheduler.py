@@ -836,9 +836,11 @@ async def _save_jobs_to_db(all_jobs: list) -> int:
     usa_jobs = [j for j in all_jobs if is_usa(j.get("location", ""))]
     log.info(f"[Cycle] {len(all_jobs)} raw -> {len(usa_jobs)} USA")
 
+    # Dedupe by (title, company, source) so the same job from different sources (e.g. LinkedIn vs Greenhouse) is kept for each source
     seen = {}
     for j in usa_jobs:
-        k = f"{(j.get('title') or '').lower().strip()}|{(j.get('company') or '').lower().strip()}"
+        src = (j.get("source") or "").strip()
+        k = f"{(j.get('title') or '').lower().strip()}|{(j.get('company') or '').lower().strip()}|{src}"
         if k and k not in seen:
             seen[k] = j
     deduped = list(seen.values())

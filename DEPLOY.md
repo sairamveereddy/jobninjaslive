@@ -4,10 +4,19 @@
 
 To get jobs from **all 12 sources** (including LinkedIn, Indeed, Dice, ZipRecruiter, Monster, Glassdoor):
 
-1. **Backend must build with Docker** so Chromium (Playwright) is available. We use `railway.toml` in repo root and in `backend/` to set `builder = "DOCKERFILE"`.
-2. **Root Directory in Railway**: If your backend service uses **repo root**, the root `Dockerfile` (which uses the Playwright image) is used. If it uses **`backend`** as root, `backend/Dockerfile` (also Playwright) is used. Both include Chromium.
-3. **Check build logs**: In Railway → your backend service → Deployments → latest build. You should see a **Docker** build (e.g. "Building Dockerfile"), not Nixpacks/Railpack. If you see Nixpacks, set **Settings → Build → Builder** to **Dockerfile** (or ensure no other builder overrides the `railway.toml` in your code).
-4. **After deploy**: Browser scrapers run in the first full cycle (in background, up to ~10 min) and then every 5 minutes. Give it 5–10 minutes after deploy, then refresh the job board; LinkedIn, Indeed, Dice, ZipRecruiter, Monster, and Glassdoor counts should start appearing.
+### Force Chromium: Railway must use Docker (not Railpack/Nixpacks)
+
+The repo has **railway.toml** and **railway.json** in both the repo root and **backend/** with `builder = "DOCKERFILE"`. If browser sources are still 0, do this in the Railway dashboard:
+
+1. Open your **backend service** → **Settings**.
+2. Under **Build**, set **Builder** to **Dockerfile** (not Railpack or NixPacks). Save.
+3. Under **Build**, if there is **Root Directory**, either:
+   - Leave it **empty** so the repo root is used and the root **Dockerfile** (Playwright image) is built, or
+   - Set it to **backend** so **backend/Dockerfile** (also Playwright) is built.
+4. (Optional) Under **Variables**, add **RAILWAY_DOCKERFILE_PATH** = **Dockerfile** so the Dockerfile is explicitly used.
+5. **Redeploy**: Deployments → ⋮ on latest → **Redeploy**, or push a small commit to trigger a new build.
+6. After the new build, open the **build logs**. You must see a **Docker** build (e.g. "Building Dockerfile", "FROM mcr.microsoft.com/playwright/python"), **not** "Nixpacks" or "Railpack".
+7. Wait **5–10 minutes** after a successful Docker deploy. Browser scrapers run in the background; then refresh the job board. LinkedIn, Indeed, Dice, ZipRecruiter, Monster, and Glassdoor counts should start appearing.
 
 **FindWork** still requires `FINDWORK_API_KEY` (get one at findwork.dev/developers) to show jobs from that source.
 
