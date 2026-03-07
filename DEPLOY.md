@@ -18,7 +18,8 @@ The repo has **railway.toml** and **railway.json** in both the repo root and **b
 6. After the new build, open the **build logs**. You must see a **Docker** build (e.g. "Building Dockerfile", "FROM mcr.microsoft.com/playwright/python"), **not** "Nixpacks" or "Railpack".
 7. Wait **5–10 minutes** after a successful Docker deploy. Browser scrapers run in the background; then refresh the job board. LinkedIn, Indeed, Dice, ZipRecruiter, Monster, and Glassdoor counts should start appearing.
 
-**FindWork** still requires `FINDWORK_API_KEY` (get one at findwork.dev/developers) to show jobs from that source.
+- **FindWork**: Set **FINDWORK_API_KEY** in Railway (get one at [findwork.dev/developers](https://findwork.dev/developers)). If unset, FindWork is skipped and shows 0.
+- **Arbeitnow**: Includes USA locations plus all **remote** jobs (API is EU-heavy; remote jobs are shown regardless of location).
 
 ## Summary
 - **Payments**: Dodo integrated; runs **without** `DODO_WEBHOOK_SECRET` (webhook still processes `payment.succeeded` when secret is unset).

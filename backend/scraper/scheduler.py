@@ -137,7 +137,8 @@ async def scrape_arbeitnow(http):
                 if not items: break
                 for it in items:
                     loc = it.get("location", "Remote")
-                    if not is_usa(loc):
+                    # Accept USA locations or any remote job (Arbeitnow is EU-heavy; remote jobs are often global)
+                    if not is_usa(loc) and not it.get("remote", False):
                         continue
                     jobs.append({
                         "id": make_id(it.get("title",""), it.get("company_name",""), it.get("url","")),
@@ -845,6 +846,13 @@ async def _save_jobs_to_db(all_jobs: list) -> int:
             seen[k] = j
     deduped = list(seen.values())
     log.info(f"[Cycle] {len(usa_jobs)} USA -> {len(deduped)} deduped")
+    # Log per-source counts in this batch (so browser vs API visibility is clear)
+    by_src = {}
+    for j in deduped:
+        s = j.get("source") or "?"
+        by_src[s] = by_src.get(s, 0) + 1
+    if by_src:
+        log.info(f"[Cycle] by source: " + ", ".join(f"{s} {n}" for s, n in sorted(by_src.items(), key=lambda x: -x[1])))
 
     now = datetime.utcnow()
     new_count = refreshed = purged = 0
@@ -854,8 +862,12 @@ async def _save_jobs_to_db(all_jobs: list) -> int:
         purged = res.rowcount
 
         for j in deduped:
-            jid = j.get("id") or make_id(
-                j.get("title",""), j.get("company",""), j.get("url",""))
+            # Include source in id so same job from LinkedIn vs Greenhouse gets two rows (both show in stats)
+            src = (j.get("source") or "").strip()
+            url = (j.get("url") or "").strip()
+            jid = make_id(
+                j.get("title",""), j.get("company",""), url + "|" + src
+            )
             if not jid:
                 continue
             existing = await db.get(Job, jid)

@@ -553,7 +553,7 @@ function startPaymentTimer() {
   if (currentUser?.is_paid) return;
   payTimer = setInterval(() => {
     if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 60000);
+  }, 2 * 60 * 1000); // every 2 min
 }
 
 function delayPayment() {
@@ -561,7 +561,7 @@ function delayPayment() {
   clearInterval(payTimer);
   payTimer = setInterval(() => {
     if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 5 * 60 * 1000);
+  }, 2 * 60 * 1000); // show again in 2 min
 }
 
 async function goCheckout() {
