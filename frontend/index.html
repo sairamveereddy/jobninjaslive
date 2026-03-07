@@ -147,8 +147,9 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .job-score{min-width:64px;max-width:100px;min-height:64px;padding:8px 10px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:var(--dark);color:#fff;text-align:center}
 .job-score .pct{font-size:18px;font-weight:800;line-height:1}
 .job-score .lbl{font-size:8px;font-weight:700;text-transform:none;letter-spacing:0;opacity:.95;line-height:1.2}
-.job-score.high{background:var(--g700)}
-.job-score.medium{background:#D97706}
+.job-score.high,.job-score.medium{background:none;min-width:0;max-width:none;min-height:0;padding:0;border-radius:0;color:var(--tx2);font-size:10px;font-weight:600}
+.job-score.high .lbl,.job-score.medium .lbl{font-size:10px;white-space:nowrap}
+.job-score.medium{color:var(--tx2)}
 .job-score.none{display:none}
 
 /* Promo Card */
@@ -472,7 +473,6 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
     <li>Lifetime access to all future job tools and features</li>
   </ul>
   <button class="btn btn-green" style="width:100%;padding:14px;font-size:16px" onclick="goCheckout()">Get Lifetime Access — $2.99</button>
-  <p style="text-align:center;margin-top:10px"><a href="/checkout.html" style="font-size:13px;color:var(--g600)">Open checkout page →</a></p>
   <div class="remind" onclick="delayPayment()">Remind me later</div>
 </div>
 </div>
@@ -553,7 +553,7 @@ function startPaymentTimer() {
   if (currentUser?.is_paid) return;
   payTimer = setInterval(() => {
     if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 2 * 60 * 1000); // every 2 min
+  }, 5 * 60 * 1000); // every 5 min
 }
 
 function delayPayment() {
@@ -561,7 +561,7 @@ function delayPayment() {
   clearInterval(payTimer);
   payTimer = setInterval(() => {
     if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 2 * 60 * 1000); // show again in 2 min
+  }, 5 * 60 * 1000); // show again in 5 min
 }
 
 async function goCheckout() {
@@ -770,8 +770,8 @@ function renderJobs(jobs) {
   let html = '<div class="job-grid">';
   jobs.forEach((j, i) => {
     let scoreHtml = '';
-    if (j.match_tier === 'high') scoreHtml = `<div class="job-score high"><span class="lbl">Must apply — matches your resume</span></div>`;
-    else if (j.match_tier === 'medium') scoreHtml = `<div class="job-score medium"><span class="lbl">Must apply — matches your resume</span></div>`;
+    if (j.match_tier === 'high') scoreHtml = `<div class="job-score high"><span class="lbl">mustapply</span></div>`;
+    else if (j.match_tier === 'medium') scoreHtml = `<div class="job-score medium"><span class="lbl">mustapply</span></div>`;
 
     const modeClass = (j.work_mode || '').toLowerCase() === 'remote' ? ' remote' : '';
     const salaryTag = j.salary ? `<span class="job-tag tag-salary">${esc(j.salary)}</span>` : '';
