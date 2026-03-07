@@ -27,6 +27,17 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 log = logging.getLogger("jobninjas")
 scheduler = create_scheduler()
 
+# When API sees 0 jobs, run seed once so deploy/cold start always recovers
+_seed_on_empty_lock = asyncio.Lock()
+_seed_on_empty_done = False
+
+
+async def _run_seed_once():
+    try:
+        await seed_remotive_jobs()
+    except Exception as e:
+        log.warning("On-demand seed failed: %s", e)
+
 
 def _seed_job_id(title, company, url):
     return hashlib.md5(f"{(title or '').lower().strip()}|{(company or '').lower().strip()}|{url}".encode()).hexdigest()[:16]
@@ -223,33 +234,39 @@ async def get_jobs(
 
     need_postfilter = bool(category)
 
-    async with AsyncSessionLocal() as db:
-        filters = [Job.expires_at > now]
+    def _build_filters():
+        f = [Job.expires_at > now]
         if q:
-            filters.append(or_(Job.title.ilike(f"%{q}%"), Job.company.ilike(f"%{q}%")))
+            f.append(or_(Job.title.ilike(f"%{q}%"), Job.company.ilike(f"%{q}%")))
         if location:
-            filters.append(Job.location.ilike(f"%{location}%"))
+            f.append(Job.location.ilike(f"%{location}%"))
         if source and source != "all":
             src_list = [s.strip() for s in source.split(",") if s.strip()]
             if len(src_list) == 1:
-                filters.append(Job.source.ilike(f"%{src_list[0]}%"))
+                f.append(Job.source.ilike(f"%{src_list[0]}%"))
             elif src_list:
-                filters.append(or_(*[Job.source.ilike(f"%{s}%") for s in src_list]))
+                f.append(or_(*[Job.source.ilike(f"%{s}%") for s in src_list]))
         if mode and mode not in ("", "Any"):
-            filters.append(Job.work_mode == mode)
+            f.append(Job.work_mode == mode)
         if jtype and jtype not in ("", "Any"):
-            filters.append(Job.job_type == jtype)
-
+            f.append(Job.job_type == jtype)
         if category == "full-time":
-            filters.append(Job.job_type == "Full-time")
-            need_postfilter = False
+            f.append(Job.job_type == "Full-time")
         elif category == "contract":
-            filters.append(Job.job_type == "Contract")
-            need_postfilter = False
+            f.append(Job.job_type == "Contract")
         elif category == "internship":
-            filters.append(or_(Job.job_type == "Internship", Job.title.ilike("%intern%")))
-            need_postfilter = False
+            f.append(or_(Job.job_type == "Internship", Job.title.ilike("%intern%")))
+        return f
 
+    filters = _build_filters()
+    if category == "full-time":
+        need_postfilter = False
+    elif category == "contract":
+        need_postfilter = False
+    elif category == "internship":
+        need_postfilter = False
+
+    async with AsyncSessionLocal() as db:
         total = (await db.execute(
             select(func.count(Job.id)).where(and_(*filters))
         )).scalar() or 0
@@ -259,6 +276,30 @@ async def get_jobs(
             .order_by(Job.scraped_at.desc())
             .limit(3000)
         )).scalars().all()
+
+    # If DB is empty (e.g. cold start), run seed once so this request can return jobs
+    did_seed = False
+    if total == 0:
+        async with _seed_on_empty_lock:
+            global _seed_on_empty_done
+            if not _seed_on_empty_done:
+                log.info("API saw 0 jobs; running on-demand Remotive seed...")
+                try:
+                    await seed_remotive_jobs()
+                    _seed_on_empty_done = True
+                    did_seed = True
+                except Exception as e:
+                    log.warning("On-demand seed failed: %s", e)
+        if did_seed:
+            async with AsyncSessionLocal() as db2:
+                total = (await db2.execute(
+                    select(func.count(Job.id)).where(and_(*filters))
+                )).scalar() or 0
+                rows = (await db2.execute(
+                    select(Job).where(and_(*filters))
+                    .order_by(Job.scraped_at.desc())
+                    .limit(3000)
+                )).scalars().all()
 
     if need_postfilter:
         rows = [r for r in rows if _match_category(category, r)]
@@ -306,6 +347,27 @@ async def get_stats():
         added_recent = (await db.execute(
             select(func.count(Job.id)).where(and_(active_q, Job.scraped_at >= recent_cutoff))
         )).scalar() or 0
+    # If DB empty, run seed once and re-query so this request returns real counts
+    if total == 0:
+        async with _seed_on_empty_lock:
+            global _seed_on_empty_done
+            if not _seed_on_empty_done:
+                log.info("Stats saw 0 jobs; running on-demand Remotive seed...")
+                await _run_seed_once()
+                _seed_on_empty_done = True
+        async with AsyncSessionLocal() as db2:
+            active_q = Job.expires_at > now
+            total = (await db2.execute(select(func.count(Job.id)).where(active_q))).scalar() or 0
+            remote = (await db2.execute(select(func.count(Job.id)).where(and_(active_q, Job.work_mode == "Remote")))).scalar() or 0
+            src = (await db2.execute(
+                select(Job.source, Job.source_color, func.count(Job.id))
+                .where(active_q).group_by(Job.source, Job.source_color)
+                .order_by(func.count(Job.id).desc())
+            )).all()
+            latest = (await db2.execute(select(func.max(Job.scraped_at)).where(active_q))).scalar()
+            added_recent = (await db2.execute(
+                select(func.count(Job.id)).where(and_(active_q, Job.scraped_at >= recent_cutoff))
+            )).scalar() or 0
     return {
         "total": total,
         "remote": remote,
