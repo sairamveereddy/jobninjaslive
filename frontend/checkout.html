@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — jobNinjas.live</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g50:#ECFDF5;--g100:#D1FAE5;--g400:#34D399;--g600:#059669;--g700:#047857;--g800:#065F46;
+  --text:#111827;--tx2:#4B5563;--tx3:#9CA3AF;--bg:#F3F4F6;--white:#FFFFFF;--border:#E5E7EB;--radius:12px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+a{color:var(--g600);text-decoration:none}
+a:hover{text-decoration:underline}
+.card{background:var(--white);border-radius:var(--radius);box-shadow:0 4px 6px rgba(0,0,0,.07);padding:32px;max-width:420px;width:100%}
+.card h1{font-size:22px;font-weight:800;margin-bottom:8px}
+.card .sub{color:var(--tx3);font-size:14px;margin-bottom:24px}
+.old-price{text-decoration:line-through;color:var(--tx3);font-size:14px;margin-bottom:4px}
+.price-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.price-row .price{font-size:36px;font-weight:800;color:var(--text)}
+.badge{font-size:16px;font-weight:700;color:var(--g700);background:var(--g100);padding:6px 12px;border-radius:8px}
+ul{margin:20px 0;padding-left:20px;color:var(--tx2);font-size:14px;line-height:1.8}
+.btn{display:block;width:100%;padding:14px;font-size:16px;font-weight:700;border-radius:8px;border:none;cursor:pointer;text-align:center;font-family:inherit;transition:.15s}
+.btn-green{background:var(--g600);color:#fff}
+.btn-green:hover{background:var(--g700)}
+.back{display:inline-block;margin-top:20px;font-size:14px;color:var(--tx3)}
+#msg{font-size:13px;margin-top:12px;color:var(--tx2);text-align:center}
+#msg.err{color:#B91C1C}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Lifetime access</h1>
+  <p class="sub">One-time payment. Unlock all job sources and features.</p>
+  <p class="old-price">$19.99 one-time</p>
+  <div class="price-row">
+    <span class="price">$2.99</span>
+    <span class="badge">85% off</span>
+  </div>
+  <ul>
+    <li>Live jobs from all 12 sources</li>
+    <li>Jobs from the last 48 hours only</li>
+    <li>Auto-refresh every 5 minutes</li>
+    <li>Matched to your resume</li>
+    <li>Lifetime access to future tools</li>
+  </ul>
+  <button class="btn btn-green" id="payBtn" onclick="goCheckout()">Pay $2.99 — Get lifetime access</button>
+  <p id="msg"></p>
+  <a href="/" class="back">← Back to Job Board</a>
+</div>
+<script>
+async function goCheckout() {
+  const btn = document.getElementById('payBtn');
+  const msg = document.getElementById('msg');
+  msg.textContent = '';
+  msg.className = '';
+  btn.disabled = true;
+  btn.textContent = 'Redirecting...';
+  try {
+    const r = await fetch('/payments/checkout', { method: 'POST', credentials: 'include' });
+    const d = await r.json();
+    if (d.already_paid) {
+      msg.textContent = 'You already have lifetime access! Redirecting...';
+      setTimeout(() => { window.location.href = '/'; }, 2000);
+      return;
+    }
+    if (d.checkout_url) {
+      window.location.href = d.checkout_url;
+    } else {
+      msg.textContent = 'Payment setup incomplete. Please try again from the main site.';
+      msg.className = 'err';
+      btn.disabled = false;
+      btn.textContent = 'Pay $2.99 — Get lifetime access';
+    }
+  } catch (e) {
+    msg.textContent = 'Please sign in first. Redirecting...';
+    msg.className = 'err';
+    setTimeout(() => { window.location.href = '/auth/google?next=' + encodeURIComponent('/checkout.html'); }, 1500);
+    btn.disabled = false;
+    btn.textContent = 'Pay $2.99 — Get lifetime access';
+  }
+}
+</script>
+</body>
+</html>

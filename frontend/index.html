@@ -144,9 +144,9 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .job-actions .link-ninja:hover{text-decoration:underline}
 
 /* Match Score Circle */
-.job-score{width:64px;height:64px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:var(--dark);color:#fff}
+.job-score{min-width:64px;max-width:100px;min-height:64px;padding:8px 10px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:var(--dark);color:#fff;text-align:center}
 .job-score .pct{font-size:18px;font-weight:800;line-height:1}
-.job-score .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-top:1px}
+.job-score .lbl{font-size:8px;font-weight:700;text-transform:none;letter-spacing:0;opacity:.95;line-height:1.2}
 .job-score.high{background:var(--g700)}
 .job-score.medium{background:#D97706}
 .job-score.none{display:none}
@@ -352,7 +352,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
       <!-- Page Header -->
       <div class="page-header">
         <h1>Recommended Jobs</h1>
-        <p id="statHeader">Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">—</span> live jobs from <span id="statSources">8</span> sources</p>
+        <p id="statHeader">Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">—</span> live jobs from <span id="statSources">12</span> sources</p>
       </div>
 
       <!-- Role Shortcuts -->
@@ -455,10 +455,14 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 </div>
 </div>
 
-<!-- Payment Modal -->
+<!-- Payment Modal: $19.99 one-time, discounted to $2.99 (85% off) -->
 <div class="modal-overlay" id="payModal">
 <div class="modal">
-  <div class="price">$2.99</div>
+  <p style="color:var(--tx3);font-size:14px;margin-bottom:4px;text-decoration:line-through">$19.99 one-time</p>
+  <div class="price" style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
+    <span>$2.99</span>
+    <span style="font-size:18px;font-weight:700;color:var(--g600);background:var(--g100);padding:4px 10px;border-radius:8px">85% off</span>
+  </div>
   <p style="color:var(--tx2);font-size:15px;margin-bottom:4px">One-time payment. <strong>Lifetime access.</strong></p>
   <ul>
     <li>Access to live, fresh jobs from all sources</li>
@@ -468,6 +472,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
     <li>Lifetime access to all future job tools and features</li>
   </ul>
   <button class="btn btn-green" style="width:100%;padding:14px;font-size:16px" onclick="goCheckout()">Get Lifetime Access — $2.99</button>
+  <p style="text-align:center;margin-top:10px"><a href="/checkout.html" style="font-size:13px;color:var(--g600)">Open checkout page →</a></p>
   <div class="remind" onclick="delayPayment()">Remind me later</div>
 </div>
 </div>
@@ -482,6 +487,21 @@ let currentPage = 1;
 let currentQ = '';
 let currentLoc = '';
 let currentSources = [];
+// All 12 job board sources (API returns only sources that have jobs; we always show full list)
+const ALL_SOURCES = [
+  { name: 'Remotive', color: '#4F46E5' },
+  { name: 'Arbeitnow', color: '#0CAA41' },
+  { name: 'The Muse', color: '#E8272A' },
+  { name: 'Jobicy', color: '#F97316' },
+  { name: 'FindWork', color: '#6C1F7A' },
+  { name: 'Greenhouse', color: '#24A47F' },
+  { name: 'LinkedIn', color: '#0A66C2' },
+  { name: 'Indeed', color: '#2164F3' },
+  { name: 'Dice', color: '#EB1C26' },
+  { name: 'ZipRecruiter', color: '#6BBE45' },
+  { name: 'Monster', color: '#6E45A5' },
+  { name: 'Glassdoor', color: '#00A162' }
+];
 let currentMode = '';
 let currentType = '';
 let currentTier = '';
@@ -533,7 +553,7 @@ function startPaymentTimer() {
   if (currentUser?.is_paid) return;
   payTimer = setInterval(() => {
     if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 30000);
+  }, 60000);
 }
 
 function delayPayment() {
@@ -733,8 +753,8 @@ function renderJobs(jobs) {
   let html = '<div class="job-grid">';
   jobs.forEach((j, i) => {
     let scoreHtml = '';
-    if (j.match_tier === 'high') scoreHtml = `<div class="job-score high"><span class="pct">${j.match_score}%</span><span class="lbl">Match Score</span></div>`;
-    else if (j.match_tier === 'medium') scoreHtml = `<div class="job-score medium"><span class="pct">${j.match_score}%</span><span class="lbl">Match Score</span></div>`;
+    if (j.match_tier === 'high') scoreHtml = `<div class="job-score high"><span class="lbl">Must apply — matches your resume</span></div>`;
+    else if (j.match_tier === 'medium') scoreHtml = `<div class="job-score medium"><span class="lbl">Must apply — matches your resume</span></div>`;
 
     const modeClass = (j.work_mode || '').toLowerCase() === 'remote' ? ' remote' : '';
     const salaryTag = j.salary ? `<span class="job-tag tag-salary">${esc(j.salary)}</span>` : '';
@@ -842,28 +862,31 @@ async function fetchStats() {
   try {
     const d = await fetch('/api/stats').then(r => r.json());
     document.getElementById('statTotal').textContent = d.total.toLocaleString();
-    document.getElementById('statSources').textContent = d.sources?.length || 8;
+    document.getElementById('statSources').textContent = ALL_SOURCES.length;
     const header = document.getElementById('statHeader');
     if (header && d.last_updated) {
       const ts = new Date(d.last_updated);
       const mins = Math.floor((Date.now() - ts.getTime()) / 60000);
       const when = mins < 1 ? 'Just now' : `${mins}m ago`;
       const extra = d.added_recent ? ` • +${d.added_recent} new in last 10m` : '';
-      header.innerHTML = `Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">${d.total.toLocaleString()}</span> live jobs from <span id="statSources">${d.sources?.length || 8}</span> sources • updated ${when}${extra}`;
+      header.innerHTML = `Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">${d.total.toLocaleString()}</span> live jobs from <span id="statSources">${ALL_SOURCES.length}</span> sources • updated ${when}${extra}`;
     }
     renderSourceFilters(d.sources || []);
   } catch(e) {}
 }
 
-function renderSourceFilters(sources) {
+function renderSourceFilters(apiSources) {
+  const countBy = {};
+  (apiSources || []).forEach(s => { countBy[s.name] = s.count; });
   const c = document.getElementById('sourceFilters');
   let html = `<div class="src-filter"><input type="checkbox" id="srcAll" ${currentSources.length===0?'checked':''} onchange="clearSources()"> All Sources</div>`;
-  sources.forEach(s => {
+  ALL_SOURCES.forEach(s => {
+    const count = countBy[s.name] ?? 0;
     const checked = currentSources.includes(s.name) ? 'checked' : '';
     html += `<div class="src-filter">
       <input type="checkbox" data-src="${s.name}" ${checked} onchange="toggleSource('${s.name}')">
       <span class="dot" style="background:${s.color}"></span> ${s.name}
-      <span class="cnt">${s.count}</span></div>`;
+      <span class="cnt">${count}</span></div>`;
   });
   c.innerHTML = html;
 }

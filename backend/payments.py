@@ -69,6 +69,7 @@ async def create_checkout(request: Request):
         raise HTTPException(502, f"DodoPayments error: {e.response.text}")
 
 def _verify_sig(body: bytes, sig_header: str) -> bool:
+    # Optional: run without DODO_WEBHOOK_SECRET; webhook still processes payment.succeeded
     if not DODO_WEBHOOK_SECRET:
         return True
     try:

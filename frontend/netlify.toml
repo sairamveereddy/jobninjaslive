@@ -16,3 +16,10 @@
   status = 200
   force = true
 
+# Proxy payments (checkout, webhook, status) to backend
+[[redirects]]
+  from = "/payments/*"
+  to = "https://jobninjaslive-production.up.railway.app/payments/:splat"
+  status = 200
+  force = true
+

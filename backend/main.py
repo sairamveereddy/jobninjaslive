@@ -346,6 +346,11 @@ async def get_resume(request: Request):
                 "skills": user.skills_list(), "title": user.resume_title,
                 "uploaded_at": user.resume_uploaded.isoformat() if user.resume_uploaded else None}
 
+@app.get("/api/health")
+async def health():
+    """Lightweight endpoint for keep-alive pings. Ping every 4–5 min so Railway does not sleep and the 5-min scraper keeps running."""
+    return {"ok": True, "scheduler": "running"}
+
 @app.post("/api/scrape")
 async def trigger_scrape():
     n = await run_scrape_cycle()
