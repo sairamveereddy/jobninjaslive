@@ -2,7 +2,7 @@
 jobNinjas.live — FastAPI v2
 uvicorn main:app --reload --port 8000
 """
-import asyncio, json, logging, os
+import asyncio, hashlib, json, logging, os, re
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from fastapi import FastAPI, Query, Request, HTTPException, UploadFile, File
@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select, func, and_, or_
 from dotenv import load_dotenv
+import httpx
 
 load_dotenv()
 
@@ -26,18 +27,100 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 log = logging.getLogger("jobninjas")
 scheduler = create_scheduler()
 
+
+def _seed_job_id(title, company, url):
+    return hashlib.md5(f"{(title or '').lower().strip()}|{(company or '').lower().strip()}|{url}".encode()).hexdigest()[:16]
+
+
+def _norm_type(t):
+    if not t:
+        return "Full-time"
+    low = (t or "").lower().replace("_", " ")
+    if "contract" in low:
+        return "Contract"
+    if "part" in low:
+        return "Part-time"
+    if "intern" in low:
+        return "Internship"
+    return "Full-time"
+
+
+def _strip_html(t):
+    return re.sub(r"<[^>]+>", "", t or "").strip()[:800]
+
+
+async def seed_remotive_jobs() -> int:
+    """Fetch up to 50 jobs from Remotive and insert. Guarantees jobs on cold start."""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.get("https://remotive.com/api/remote-jobs?limit=50")
+            r.raise_for_status()
+            data = r.json()
+    except Exception as e:
+        log.warning("Seed Remotive fetch failed: %s", e)
+        return 0
+    jobs = data.get("jobs") or []
+    if not jobs:
+        return 0
+    now = datetime.utcnow()
+    exp = now + timedelta(hours=48)
+    added = 0
+    async with AsyncSessionLocal() as db:
+        for it in jobs:
+            title = (it.get("title") or "").strip()
+            company = (it.get("company_name") or "").strip()
+            url = (it.get("url") or "").strip()
+            if not title or not url:
+                continue
+            jid = _seed_job_id(title, company, url)
+            existing = await db.get(Job, jid)
+            if existing:
+                existing.expires_at = exp
+                continue
+            loc = (it.get("candidate_required_location") or "Remote").strip() or "Remote"
+            db.add(Job(
+                id=jid,
+                title=title[:299],
+                company=company[:199],
+                company_logo=(it.get("company_logo_url") or "")[:499],
+                location=loc[:299],
+                salary=(it.get("salary") or "")[:199],
+                job_type=_norm_type(it.get("job_type")),
+                work_mode="Remote",
+                description=_strip_html(it.get("description") or ""),
+                url=url[:999],
+                source="Remotive",
+                source_color="#4F46E5",
+                tags=json.dumps((it.get("tags") or [])[:8]),
+                easy_apply=False,
+                scraped_at=now,
+                expires_at=exp,
+            ))
+            added += 1
+        await db.commit()
+    log.info("Seed Remotive: %s jobs inserted.", added)
+    return added
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    # Run first scrape before accepting traffic so deployed app has jobs immediately
+    # Guarantee jobs: seed from Remotive first (single fast request)
     try:
-        log.info("Running initial job scrape (blocking until done or timeout)...")
-        n = await asyncio.wait_for(run_scrape_cycle(), timeout=180.0)
-        log.info("Initial scrape finished: %s new jobs.", n)
-    except asyncio.TimeoutError:
-        log.warning("Initial scrape timed out after 180s; scheduler will retry every 5 min.")
+        n = await asyncio.wait_for(seed_remotive_jobs(), timeout=45.0)
+        if n:
+            log.info("Seed finished: %s jobs in DB.", n)
     except Exception as e:
-        log.exception("Initial scrape failed: %s; scheduler will retry every 5 min.", e)
+        log.warning("Seed failed: %s", e)
+    # Then run full scrape to add more sources
+    try:
+        log.info("Running full job scrape (blocking until done or timeout)...")
+        n = await asyncio.wait_for(run_scrape_cycle(), timeout=180.0)
+        log.info("Full scrape finished: %s new jobs.", n)
+    except asyncio.TimeoutError:
+        log.warning("Full scrape timed out after 180s; scheduler will retry every 5 min.")
+    except Exception as e:
+        log.exception("Full scrape failed: %s; scheduler will retry every 5 min.", e)
     scheduler.start()
     yield
     scheduler.shutdown()
