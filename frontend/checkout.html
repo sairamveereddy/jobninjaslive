@@ -49,37 +49,76 @@ ul{margin:20px 0;padding-left:20px;color:var(--tx2);font-size:14px;line-height:1
   <a href="/" class="back">← Back to Job Board</a>
 </div>
 <script>
-async function goCheckout() {
-  const btn = document.getElementById('payBtn');
-  const msg = document.getElementById('msg');
-  msg.textContent = '';
-  msg.className = '';
-  btn.disabled = true;
-  btn.textContent = 'Redirecting...';
-  try {
-    const r = await fetch('/payments/checkout', { method: 'POST', credentials: 'include' });
-    const d = await r.json();
-    if (d.already_paid) {
-      msg.textContent = 'You already have access! Redirecting...';
-      setTimeout(() => { window.location.href = '/'; }, 2000);
-      return;
+(function(){
+  var next = encodeURIComponent('/checkout.html');
+  var signInUrl = '/auth/google?next=' + next;
+
+  async function ensureAuth() {
+    try {
+      var r = await fetch('/auth/me', { credentials: 'include' });
+      if (r.status === 401) {
+        window.location.href = signInUrl;
+        return false;
+      }
+      return true;
+    } catch (e) {
+      window.location.href = signInUrl;
+      return false;
     }
-    if (d.checkout_url) {
-      window.location.href = d.checkout_url;
-    } else {
-      msg.textContent = 'Payment setup incomplete. Please try again from the main site.';
+  }
+
+  window.goCheckout = async function() {
+    var btn = document.getElementById('payBtn');
+    var msg = document.getElementById('msg');
+    msg.textContent = '';
+    msg.className = '';
+    btn.disabled = true;
+    btn.textContent = 'Redirecting...';
+    try {
+      var r = await fetch('/payments/checkout', { method: 'POST', credentials: 'include' });
+      if (r.status === 401) {
+        msg.textContent = 'Please sign in first. Redirecting...';
+        msg.className = 'err';
+        setTimeout(function() { window.location.href = signInUrl; }, 1500);
+        btn.disabled = false;
+        btn.textContent = 'Pay $4.99 — Get 1 year access';
+        return;
+      }
+      if (!r.ok) {
+        msg.textContent = 'Payment unavailable. Please try again in a moment.';
+        msg.className = 'err';
+        btn.disabled = false;
+        btn.textContent = 'Pay $4.99 — Get 1 year access';
+        return;
+      }
+      var d = await r.json();
+      if (d.already_paid) {
+        msg.textContent = 'You already have access! Redirecting...';
+        setTimeout(function() { window.location.href = '/'; }, 2000);
+        return;
+      }
+      if (d.checkout_url) {
+        window.location.href = d.checkout_url;
+      } else {
+        msg.textContent = 'Payment setup incomplete. Please try again from the main site.';
+        msg.className = 'err';
+        btn.disabled = false;
+        btn.textContent = 'Pay $4.99 — Get 1 year access';
+      }
+    } catch (e) {
+      msg.textContent = 'Something went wrong. Please try again.';
       msg.className = 'err';
       btn.disabled = false;
       btn.textContent = 'Pay $4.99 — Get 1 year access';
     }
-  } catch (e) {
-    msg.textContent = 'Please sign in first. Redirecting...';
-    msg.className = 'err';
-    setTimeout(() => { window.location.href = '/auth/google?next=' + encodeURIComponent('/checkout.html'); }, 1500);
-    btn.disabled = false;
-    btn.textContent = 'Pay $4.99 — Get 1 year access';
-  }
-}
+  };
+
+  ensureAuth().then(function(ok) {
+    if (!ok) return;
+    var payBtn = document.getElementById('payBtn');
+    if (payBtn) payBtn.textContent = 'Pay $4.99 — Get 1 year access';
+  });
+})();
 </script>
 </body>
 </html>

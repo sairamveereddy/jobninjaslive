@@ -368,7 +368,7 @@ function renderPagination(total, per){
   const list = document.getElementById('certList');
   list.innerHTML = '<div class="grid">' + Array(6).fill('<div class="skeleton"></div>').join('') + '</div>';
   try {
-    const res = await fetch('data/cert-platforms.json');
+    const res = await fetch('/data/cert-platforms.json');
     if(!res.ok) throw new Error(res.statusText);
     allPlatforms = await res.json();
   } catch(e) {
