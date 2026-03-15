@@ -119,6 +119,28 @@ Key frontend behaviors in `index.html`:
 
 ---
 
+## Keep scraper running on Railway (every 5 min, 48h expiry)
+
+The backend runs a **5‑minute scrape cycle** and only **deletes jobs after 48 hours** (`expires_at < now`). On Railway, the service can **sleep** when there is no traffic, which stops the scheduler.
+
+To keep it running nonstop:
+
+1. **Ping the backend every 4–5 minutes** so the process stays awake.
+2. Use a free cron service and call your **backend** health URL (not the Netlify URL):
+   - **URL:** `https://jobninjaslive-production.up.railway.app/api/health`
+   - **Interval:** every 5 minutes (e.g. cron-job.org, UptimeRobot, or similar).
+
+Example with **cron-job.org** (free):
+
+- Create a cron job.
+- URL: `https://jobninjaslive-production.up.railway.app/api/health`
+- Schedule: every 5 minutes.
+- Save.
+
+Then the scheduler keeps running, scrapes every 5 min, and only removes jobs after 48h.
+
+---
+
 ## Production Notes
 
 - Swap SQLite → Postgres by changing `DATABASE_URL` (e.g. `postgresql+asyncpg://...`).

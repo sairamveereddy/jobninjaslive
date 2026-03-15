@@ -21,8 +21,16 @@ The repo has **railway.toml** and **railway.json** in both the repo root and **b
 - **FindWork**: Set **FINDWORK_API_KEY** in Railway (get one at [findwork.dev/developers](https://findwork.dev/developers)). If unset, FindWork is skipped and shows 0.
 - **Arbeitnow**: Includes USA locations plus all **remote** jobs (API is EU-heavy; remote jobs are shown regardless of location).
 
+## Dodo Payments
+
+- **Required env (Railway)**: `DODO_API_KEY`, `DODO_PRODUCT_ID`. Create a $4.99 one-time product in the [Dodo dashboard](https://dashboard.dodopayments.com) and set its ID as `DODO_PRODUCT_ID`.
+- **Optional**: `DODO_WEBHOOK_SECRET` — if set, webhook requests are signature-verified; if unset, webhooks still process `payment.succeeded`.
+- **Optional**: `APP_URL` — base URL for success redirect (e.g. `https://jobninjas.live`). Defaults to `http://localhost:8000`. Used as `return_url` so after payment users land on `APP_URL/?payment=success`.
+- **Optional**: `DODO_API_BASE` — API base URL. Default `https://api.dodopayments.com`. For test mode use `https://test.dodopayments.com`.
+- **Webhook URL** (set in Dodo dashboard): `https://your-backend.up.railway.app/payments/webhook` (or your live backend URL + `/payments/webhook`). Subscribe to `payment.succeeded` (and optionally `payment.failed`, `payment.cancelled`).
+
 ## Summary
-- **Payments**: Dodo integrated; runs **without** `DODO_WEBHOOK_SECRET` (webhook still processes `payment.succeeded` when secret is unset).
+- **Payments**: Dodo integrated; checkout uses Dodo’s `/checkouts` API; webhook matches by `metadata.user_id` or payment id.
 - **.env** is in `.gitignore` — never commit it. Set vars in **Railway** (and Netlify if needed).
 
 ## Push to Git (run in your terminal)

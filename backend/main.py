@@ -177,6 +177,65 @@ _STARTUP_COMPANIES = {
     "coinbase", "instacart", "doordash", "duolingo",
 }
 
+def _parse_experience_years(text):
+    """Extract (min_years, max_years) from job title/description. Returns (None, None) if no clear match."""
+    if not text:
+        return None, None
+    text = (text or "").lower()
+    # Patterns: "5 years", "5+ years", "5 - 7 years", "3-5 years", "10+ years", "at least 5 years"
+    min_y, max_y = None, None
+    # Single number or X+: (\d+)\+?\s*years?
+    for m in re.finditer(r"(\d+)\s*[\+\-]\s*(\d+)\s*years?", text):
+        a, b = int(m.group(1)), int(m.group(2))
+        low, high = min(a, b), max(a, b)
+        if min_y is None or low < min_y:
+            min_y = low
+        if max_y is None or high > max_y:
+            max_y = high
+    for m in re.finditer(r"(\d+)\+\s*years?", text):
+        n = int(m.group(1))
+        if min_y is None or n < min_y:
+            min_y = n
+        if max_y is None or n > max_y:
+            max_y = n
+    for m in re.finditer(r"\b(\d+)\s*years?\b", text):
+        n = int(m.group(1))
+        if min_y is None or n < min_y:
+            min_y = n
+        if max_y is None or n > max_y:
+            max_y = n
+    if "senior" in text and max_y is None and min_y is None:
+        min_y, max_y = 10, None  # senior often implies 10+
+    if "junior" in text or "entry" in text or "entry-level" in text:
+        if max_y is None or max_y > 5:
+            max_y = 5 if max_y is None else min(max_y, 5)
+    return min_y, max_y
+
+
+def _match_experience(experience, job_row):
+    """True if job matches experience filter (0, 1, ..., 9, 10plus)."""
+    blob = f"{(job_row.title or '')} {(job_row.description or '')}"
+    min_y, max_y = _parse_experience_years(blob)
+    if experience == "10plus":
+        if min_y is not None and min_y >= 10:
+            return True
+        if max_y is not None and max_y >= 10:
+            return True
+        if "10+" in blob or "senior" in blob.lower():
+            return True
+        return False
+    try:
+        n = int(experience)
+    except (TypeError, ValueError):
+        return True
+    if n < 0 or n > 9:
+        return True
+    # Job requirement overlaps year n: min_y <= n <= max_y (or unbounded side)
+    if min_y is None and max_y is None:
+        return False
+    return (min_y is None or min_y <= n) and (max_y is None or max_y >= n)
+
+
 def _match_category(cat, job_row):
     co = (job_row.company or "").lower()
     desc = (job_row.description or "").lower()
@@ -229,7 +288,7 @@ async def get_jobs(
     q: str = Query(""), location: str = Query(""),
     source: str = Query(""), mode: str = Query(""),
     jtype: str = Query(""), tier: str = Query(""),
-    category: str = Query(""),
+    category: str = Query(""), experience: str = Query(""),
     page: int = Query(1, ge=1), per: int = Query(20, ge=1, le=100),
 ):
     now = datetime.utcnow()
@@ -288,19 +347,30 @@ async def get_jobs(
             .limit(3000)
         )).scalars().all()
 
-    # If DB is empty (e.g. cold start), run seed once so this request can return jobs
+    # If DB is empty (e.g. cold start), run full API-only cycle once so all 6 API sources get jobs
     did_seed = False
     if total == 0:
         async with _seed_on_empty_lock:
             global _seed_on_empty_done
             if not _seed_on_empty_done:
-                log.info("API saw 0 jobs; running on-demand Remotive seed...")
+                log.info("API saw 0 jobs; running on-demand API-only cycle (all 6 sources)...")
                 try:
+                    await asyncio.wait_for(run_api_only_cycle(), timeout=90.0)
+                    _seed_on_empty_done = True
+                    did_seed = True
+                except asyncio.TimeoutError:
+                    log.warning("On-demand API cycle timed out; trying Remotive seed.")
                     await seed_remotive_jobs()
                     _seed_on_empty_done = True
                     did_seed = True
                 except Exception as e:
-                    log.warning("On-demand seed failed: %s", e)
+                    log.warning("On-demand API cycle failed: %s; trying Remotive seed.", e)
+                    try:
+                        await seed_remotive_jobs()
+                        _seed_on_empty_done = True
+                        did_seed = True
+                    except Exception as e2:
+                        log.warning("Remotive seed also failed: %s", e2)
         if did_seed:
             async with AsyncSessionLocal() as db2:
                 total = (await db2.execute(
@@ -316,6 +386,14 @@ async def get_jobs(
         rows = [r for r in rows if _match_category(category, r)]
         total = len(rows)
 
+    _exp_vals = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10plus")
+    if experience and experience in _exp_vals:
+        rows = [r for r in rows if _match_experience(experience, r)]
+        total = len(rows)
+
+    # Diversify by source first so the first page shows jobs from many sources (not just Greenhouse)
+    rows = _diversify(rows, lambda j: (j.source or "").strip(), max_per_round=3)
+    # Then diversify by company so we don't get too many from the same company
     rows = _diversify(rows, lambda j: (j.company or "").lower(), max_per_round=2)
 
     jobs = [{
@@ -358,14 +436,19 @@ async def get_stats():
         added_recent = (await db.execute(
             select(func.count(Job.id)).where(and_(active_q, Job.scraped_at >= recent_cutoff))
         )).scalar() or 0
-    # If DB empty, run seed once and re-query so this request returns real counts
+    # If DB empty, run full API-only cycle once (same as get_jobs) so all 6 sources get counts
     if total == 0:
         async with _seed_on_empty_lock:
             global _seed_on_empty_done
             if not _seed_on_empty_done:
-                log.info("Stats saw 0 jobs; running on-demand Remotive seed...")
-                await _run_seed_once()
-                _seed_on_empty_done = True
+                log.info("Stats saw 0 jobs; running on-demand API-only cycle (all 6 sources)...")
+                try:
+                    await asyncio.wait_for(run_api_only_cycle(), timeout=90.0)
+                    _seed_on_empty_done = True
+                except (asyncio.TimeoutError, Exception) as e:
+                    log.warning("On-demand API cycle failed: %s; trying Remotive seed.", e)
+                    await _run_seed_once()
+                    _seed_on_empty_done = True
         async with AsyncSessionLocal() as db2:
             active_q = Job.expires_at > now
             total = (await db2.execute(select(func.count(Job.id)).where(active_q))).scalar() or 0

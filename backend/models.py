@@ -16,6 +16,7 @@ class User(Base):
 
     is_paid         = Column(Boolean, default=False)
     paid_at         = Column(DateTime, nullable=True)
+    paid_until      = Column(DateTime, nullable=True)  # 1 year from paid_at
     payment_id      = Column(String(200), nullable=True)
 
     resume_filename = Column(String(300), nullable=True)
@@ -35,6 +36,12 @@ class User(Base):
             return json.loads(self.resume_skills or "[]")
         except Exception:
             return []
+
+    def is_active_paid(self):
+        """True if payment is valid (within 1 year of paid_at)."""
+        if getattr(self, "paid_until", None) and self.paid_until:
+            return self.paid_until > datetime.utcnow()
+        return bool(self.is_paid)
 
 class Payment(Base):
     __tablename__ = "payments"

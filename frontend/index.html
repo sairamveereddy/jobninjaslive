@@ -5,20 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>jobNinjas.live — Every Job. One Place.</title>
 <link rel="icon" type="image/png" href="jobninjas-logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --g50:#ECFDF5;--g100:#D1FAE5;--g200:#A7F3D0;--g300:#6EE7B7;
   --g400:#34D399;--g500:#10B981;--g600:#059669;--g700:#047857;--g800:#065F46;--g900:#064E3B;
-  --dark:#111827;--dark2:#1F2937;--dark3:#374151;
-  --text:#111827;--tx2:#4B5563;--tx3:#9CA3AF;--tx4:#D1D5DB;
-  --bg:#F3F4F6;--white:#FFFFFF;
-  --border:#E5E7EB;--border2:#D1D5DB;
-  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
-  --shadow-lg:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+  --primary:#0369A1;--primary-light:#0EA5E9;--cta:#22C55E;
+  --dark:#0C4A6E;--dark2:#075985;--dark3:#0E7490;
+  --text:#0C4A6E;--tx2:#475569;--tx3:#64748B;--tx4:#94A3B8;
+  --bg:#F0F9FF;--white:#FFFFFF;
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --radius:10px;--shadow:0 1px 3px rgba(12,74,110,.06);
+  --shadow-lg:0 4px 12px rgba(12,74,110,.08);
+  --transition:200ms ease;
 }
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:inherit;border:none;outline:none;background:none}
 .mono{font-family:'JetBrains Mono',monospace}
@@ -33,9 +35,13 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .logo .brand-main{color:#05c38f;font-weight:800;font-size:18px}
 .logo .brand-by{color:var(--tx3);font-weight:500;font-size:11px}
 .topnav-links{display:flex;align-items:center;gap:6px}
-.topnav-links a{font-weight:500;color:var(--tx2);font-size:13px;padding:6px 12px;border-radius:6px;transition:.15s}
+.topnav-links a{font-weight:500;color:var(--tx2);font-size:13px;padding:6px 12px;border-radius:6px;transition:background var(--transition),color var(--transition);display:inline-flex;align-items:center;gap:6px}
 .topnav-links a:hover{background:var(--g50);color:var(--g700)}
 .topnav-links a.active{background:var(--g50);color:var(--g700);font-weight:600}
+.topnav-links a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.badge-pro{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--g600);background:var(--g100);padding:2px 5px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.sidebar-item .badge-pro{margin-left:auto;color:var(--g400);background:rgba(16,185,129,.2);padding:2px 6px}
+.nav-menu a .badge-pro{margin-left:6px}
 .topnav-right{display:flex;align-items:center;gap:10px}
 .btn{padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;transition:.15s;display:inline-flex;align-items:center;gap:6px}
 .btn-green{background:var(--g600);color:#fff}.btn-green:hover{background:var(--g700)}
@@ -52,10 +58,11 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .sidebar::-webkit-scrollbar-thumb{background:var(--dark3);border-radius:4px}
 .sidebar-section{padding:16px 16px 8px}
 .sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin-bottom:10px}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:.15s;margin-bottom:2px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:background var(--transition),color var(--transition);margin-bottom:2px}
 .sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .sidebar-item.active{background:var(--g600);color:#fff;font-weight:600}
-.sidebar-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-item .icon{font-size:16px;width:20px;height:20px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.sidebar-item .icon svg{width:18px;height:18px;stroke:currentColor}
 .sidebar-item .badge-soon{font-size:9px;background:var(--dark3);color:var(--tx3);padding:2px 6px;border-radius:4px;margin-left:auto}
 .sidebar-divider{border-top:1px solid rgba(255,255,255,.08);margin:8px 16px}
 .sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.08)}
@@ -98,6 +105,16 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .search-input input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--white);transition:.15s}
 .search-input input:focus{border-color:var(--g400);box-shadow:0 0 0 3px rgba(16,185,129,.1);outline:none}
 .search-input .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px}
+.exp-dropdown{position:relative;min-width:140px}
+.exp-dropdown-btn{width:100%;min-height:38px;padding:10px 32px 10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--white);color:var(--tx2);text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:.15s}
+.exp-dropdown-btn:hover{border-color:var(--g400)}
+.exp-dropdown-btn::after{content:'';width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid var(--tx3);margin-left:auto;flex-shrink:0}
+.exp-dropdown-panel{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-lg);z-index:50;max-height:240px;overflow-y:auto;padding:4px}
+.exp-dropdown-panel.open{display:block}
+.exp-dropdown-panel button{display:block;width:100%;padding:8px 12px;border:none;border-radius:6px;background:0;font-size:13px;font-family:inherit;color:var(--tx2);text-align:left;cursor:pointer;transition:.15s}
+.exp-dropdown-panel button:hover{background:var(--bg);color:var(--g700)}
+.exp-dropdown-panel button.active{background:var(--g100);color:var(--g700);font-weight:600}
+@media(max-width:900px){.exp-dropdown{min-width:120px}.exp-dropdown-btn{min-height:44px}}
 .search-btn{padding:10px 20px}
 
 /* Category Tabs */
@@ -107,9 +124,9 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .cat-tab.active{background:var(--g600);color:#fff;border-color:var(--g600)}
 
 /* Tier Tabs */
-.tier-tabs{display:flex;gap:6px;margin-bottom:12px}
-.tier-tab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;background:var(--white);color:var(--tx2);border:1px solid var(--border);transition:.15s}
-.tier-tab:hover,.tier-tab.active{background:var(--g600);color:#fff;border-color:var(--g600)}
+.tier-tabs,.exp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tier-tab,.exp-tab{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;background:var(--white);color:var(--tx2);border:1px solid var(--border);transition:.15s}
+.tier-tab:hover,.tier-tab.active,.exp-tab:hover,.exp-tab.active{background:var(--g600);color:#fff;border-color:var(--g600)}
 
 /* Feed Info Row */
 .feed-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px;color:var(--tx3)}
@@ -129,7 +146,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .job-company span{color:var(--tx3);font-weight:400}
 .job-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .job-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500;background:var(--bg);color:var(--tx2);border:1px solid var(--border)}
-.job-tag .tag-icon{font-size:10px}
+.job-tag .tag-icon{display:inline-flex;flex-shrink:0}.job-tag .tag-icon svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
 .job-tag.tag-location{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}
 .job-tag.tag-mode{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
 .job-tag.tag-mode.remote{background:#ECFDF5;color:#065F46;border-color:#A7F3D0}
@@ -198,16 +215,6 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .modal .matched-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
 .modal-footer{display:flex;gap:10px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--border)}
 
-/* Payment Modal */
-#payModal .modal{max-width:440px;text-align:center;padding:40px 32px}
-#payModal h2{font-size:24px;text-align:center;padding-right:0}
-#payModal .price{font-size:48px;font-weight:800;color:var(--g600);margin:16px 0}
-#payModal ul{text-align:left;list-style:none;margin:16px 0 24px;font-size:14px;color:var(--tx2)}
-#payModal ul li{padding:6px 0;display:flex;align-items:center;gap:8px}
-#payModal ul li::before{content:'✓';width:22px;height:22px;border-radius:50%;background:var(--g500);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-#payModal .remind{font-size:13px;color:var(--tx3);cursor:pointer;margin-top:16px;text-decoration:underline}
-#payModal .remind:hover{color:var(--g600)}
-
 /* Toast */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px}
 .toast{background:#fff;border-radius:10px;padding:12px 18px;box-shadow:0 8px 32px rgba(0,0,0,.12);font-size:13px;font-weight:600;transform:translateX(120%);animation:slideIn .3s forwards;border-left:4px solid var(--g600)}
@@ -219,12 +226,72 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .skeleton{background:linear-gradient(90deg,var(--bg) 25%,var(--border) 50%,var(--bg) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:10px;height:100px;margin-bottom:10px}
 @keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
 
-/* Responsive */
+/* Icon SVGs (replace emoji) */
+.icon svg,.search-icon svg{width:1em;height:1em;display:inline-block;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:2}
+.search-icon{display:inline-flex;align-items:center;justify-content:center}
+.drop-zone .icon svg{width:28px;height:28px}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+
+/* Mobile nav (hamburger + drawer) */
+.nav-toggle{display:none;align-items:center;justify-content:center;width:44px;height:44px;margin-right:-8px;border-radius:var(--radius);color:var(--tx2);background:transparent;transition:background var(--transition),color var(--transition)}
+.nav-toggle:hover,.nav-toggle:focus-visible{background:var(--g50);color:var(--g700);outline:none}
+.nav-toggle svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+.nav-overlay{display:none;position:fixed;inset:0;background:rgba(12,74,110,.3);z-index:98;backdrop-filter:blur(2px)}
+body.nav-open .nav-overlay{display:block}
+.nav-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:auto;max-height:calc(100vh - 56px);overflow-y:auto;background:var(--white);border-bottom:1px solid var(--border);z-index:99;padding:16px;flex-direction:column;gap:4px;box-shadow:var(--shadow-lg)}
+body.nav-open .nav-menu{display:flex}
+.nav-menu a{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--radius);font-weight:500;color:var(--text);min-height:48px;transition:background var(--transition)}
+.nav-menu a:hover,.nav-menu a.active{background:var(--g50);color:var(--g700)}
+.nav-menu .nav-menu-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin:12px 0 4px;padding:0 16px}
+.nav-menu .nav-menu-label:first-child{margin-top:0}
+
+/* Responsive: tablet and down */
 @media(max-width:900px){
   .sidebar{display:none}
   .main{padding:16px}
   .main-inner{flex-direction:column}
   .ai-column{width:100%}
+  .topnav-links{display:none}
+  .nav-toggle{display:flex}
+}
+body.nav-open{overflow:hidden}
+
+/* Responsive: mobile-first tweaks */
+@media(max-width:900px){
+  .topnav{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+  .main{padding:12px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left))}
+  .page-header h1{font-size:20px}
+  .search-row{flex-wrap:wrap;gap:8px}
+  .search-input{min-width:0}
+  .search-input input{min-height:44px}
+  .search-row .search-input:last-of-type{max-width:none}
+  .search-btn{min-height:44px;flex:1;min-width:120px}
+  .chips{padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  .chip{min-height:44px;padding:10px 14px;font-size:12px}
+  .cat-tabs,.tier-tabs,.exp-tabs{gap:8px}
+  .cat-tab,.tier-tab,.exp-tab{min-height:44px;padding:8px 14px}
+  .feed-info{flex-wrap:wrap;gap:8px;font-size:11px}
+  .job-card{flex-direction:column;gap:10px;min-height:auto;padding:16px}
+  .job-score{min-width:56px;min-height:56px;padding:6px}.job-score .pct{font-size:16px}
+  .job-actions{flex-wrap:wrap;gap:8px}
+  .job-actions .btn-apply,.job-actions .link-ninja{min-height:44px}
+  .pagination{flex-wrap:wrap;gap:6px;padding-bottom:env(safe-area-inset-bottom)}
+  .page-btn{min-width:44px;min-height:44px}
+  .modal-overlay{padding:12px;align-items:flex-end}
+  .modal{max-height:90vh;border-radius:12px 12px 0 0;padding:20px 16px;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+  .modal-footer{flex-direction:column}.modal-footer .btn{min-height:44px}
+}
+@media(max-width:480px){
+  .topnav-left{gap:12px}
+  .logo .brand-main{font-size:16px}
+  .logo .brand-by{font-size:10px}
+  .logo-icon{width:28px;height:28px}
+  .page-header h1{font-size:18px}
+  .job-grid{gap:10px}
 }
 </style>
 </head>
@@ -243,18 +310,30 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
       </div>
     </a>
     <div class="topnav-links">
-      <a href="/" class="active">🔍 Job Board</a>
-      <a href="/certifications.html">🎓 Certifications</a>
-      <a href="https://jobninjas.ai" target="_blank">🤖 AI Resume</a>
-      <a href="https://jobninjas.ai" target="_blank">📝 ATS Scanner</a>
-      <a href="https://jobninjas.ai" target="_blank">💼 Products</a>
+      <a href="/" class="active"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span> Job Board</a>
+      <a href="/certifications.html"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span> Certifications</a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></span> AI Resume<span class="badge-pro">Pro</span></a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg></span> ATS Scanner<span class="badge-pro">Pro</span></a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></span> Products<span class="badge-pro">Pro</span></a>
     </div>
   </div>
   <div class="topnav-right">
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" onclick="document.body.classList.toggle('nav-open')">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+    </button>
     <div id="authArea">
       <button onclick="window.location.href='/auth/google'" class="btn btn-green btn-sm">Sign in with Google</button>
     </div>
   </div>
+</nav>
+<div class="nav-overlay" id="navOverlay" aria-hidden="true" onclick="document.body.classList.remove('nav-open')"></div>
+<nav class="nav-menu" id="navMenu" aria-label="Mobile menu">
+  <span class="nav-menu-label">Pages</span>
+  <a href="/" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span> Job Board</a>
+  <a href="/certifications.html" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span> Certifications</a>
+  <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></span> AI Resume<span class="badge-pro">Pro</span></a>
+  <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg></span> ATS Scanner<span class="badge-pro">Pro</span></a>
+  <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></span> Products<span class="badge-pro">Pro</span></a>
 </nav>
 
 <!-- App Layout -->
@@ -266,14 +345,14 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
   <!-- Navigation -->
   <div class="sidebar-section">
     <div class="sidebar-label">Navigation</div>
-    <div class="sidebar-item active"><span class="icon">🔍</span> Jobs / Job Search</div>
-    <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">📄</span> Resume Scanner</a>
-    <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">🤖</span> AI Ninja</a>
-    <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">📊</span> Application Tracker</a>
-    <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">📑</span> My Resumes</a>
-    <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">🎤</span> Interview Prep</a>
-    <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">🛠</span> Free Tools</a>
-    <div class="sidebar-item" style="opacity:.5;cursor:default"><span class="icon">⚡</span> Auto-Fill Applications <span class="badge-soon">Soon</span></div>
+    <div class="sidebar-item active"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span> Jobs / Job Search</div>
+    <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg></span> Resume Scanner<span class="badge-pro">Pro</span></a>
+    <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></span> AI Ninja<span class="badge-pro">Pro</span></a>
+    <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg></span> Application Tracker<span class="badge-pro">Pro</span></a>
+    <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></span> My Resumes<span class="badge-pro">Pro</span></a>
+    <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg></span> Interview Prep<span class="badge-pro">Pro</span></a>
+    <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span> Free Tools<span class="badge-pro">Pro</span></a>
+    <div class="sidebar-item" style="opacity:.5;cursor:default"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span> Auto-Fill Applications <span class="badge-soon">Soon</span></div>
   </div>
 
   <div class="sidebar-divider"></div>
@@ -285,7 +364,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
   <div class="resume-panel" id="resumePanel">
     <div id="resumeNone">
       <div class="drop-zone" onclick="document.getElementById('resumeInput').click()" id="dropZone">
-        <div class="icon">📤</div>
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg></div>
         <div class="label">Upload PDF or DOCX</div>
         <div class="sub">AI matches jobs to your skills</div>
       </div>
@@ -295,7 +374,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
       <div class="title" id="resumeTitle">—</div>
       <div class="sub" id="resumeSub">—</div>
       <div class="skill-tags" id="resumeSkills"></div>
-      <button class="btn btn-green btn-sm" onclick="setTier('high')" style="width:100%;justify-content:center">🎯 Show High Matches</button>
+      <button class="btn btn-green btn-sm" onclick="setTier('high')" style="width:100%;justify-content:center"><span class="icon" aria-hidden="true" style="display:inline-flex;margin-right:4px"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span> Show High Matches</button>
       <span style="font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;display:inline-block;margin-top:6px" onclick="document.getElementById('resumeInput').click()">Replace</span>
     </div>
   </div>
@@ -307,6 +386,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
     <div class="sidebar-label">Sources</div>
   </div>
   <div id="sourceFilters" style="padding:0 4px 8px"></div>
+  <p class="sidebar-hint" style="margin-top:6px;padding:0 4px;font-size:10px;color:var(--tx3);line-height:1.3">Remotive, Greenhouse, The Muse, Jobicy, Arbeitnow &amp; FindWork load via API. LinkedIn, Indeed, Dice, ZipRecruiter, Monster &amp; Glassdoor need server browser and may show 0 until enabled.</p>
 
   <div class="sidebar-divider"></div>
 
@@ -356,6 +436,15 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
         <p id="statHeader">Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">—</span> live jobs from <span id="statSources">12</span> sources</p>
       </div>
 
+      <!-- Price banner: hidden when user has paid (1 year access) -->
+      <div class="promo-card" id="priceBanner" style="display:flex">
+        <div>
+          <h3>Unlock all 12 job sources</h3>
+          <p>$4.99 one-time — valid 1 year</p>
+        </div>
+        <a href="/checkout.html" class="btn btn-sm">Get access</a>
+      </div>
+
       <!-- Role Shortcuts -->
       <div class="chips" style="justify-content:flex-start;margin-bottom:8px">
         <button class="chip" onclick="quickRole('Machine Learning Engineer')">AI / ML Engineer</button>
@@ -377,11 +466,30 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
       <!-- Search Bar -->
       <div class="search-row">
         <div class="search-input">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
           <input type="text" id="searchQ" placeholder="Search jobs..." onkeydown="if(event.key==='Enter')doSearch()">
         </div>
+        <div class="exp-dropdown" id="expDropdown">
+          <button type="button" class="exp-dropdown-btn" id="expDropdownBtn" onclick="toggleExpDropdown()" aria-haspopup="listbox" aria-expanded="false">
+            <span id="expDropdownLabel">Experience</span>
+          </button>
+          <div class="exp-dropdown-panel" id="expDropdownPanel" role="listbox">
+            <button type="button" role="option" data-exp="" onclick="pickExperience('')">Any</button>
+            <button type="button" role="option" data-exp="0" onclick="pickExperience('0')">0</button>
+            <button type="button" role="option" data-exp="1" onclick="pickExperience('1')">1</button>
+            <button type="button" role="option" data-exp="2" onclick="pickExperience('2')">2</button>
+            <button type="button" role="option" data-exp="3" onclick="pickExperience('3')">3</button>
+            <button type="button" role="option" data-exp="4" onclick="pickExperience('4')">4</button>
+            <button type="button" role="option" data-exp="5" onclick="pickExperience('5')">5</button>
+            <button type="button" role="option" data-exp="6" onclick="pickExperience('6')">6</button>
+            <button type="button" role="option" data-exp="7" onclick="pickExperience('7')">7</button>
+            <button type="button" role="option" data-exp="8" onclick="pickExperience('8')">8</button>
+            <button type="button" role="option" data-exp="9" onclick="pickExperience('9')">9</button>
+            <button type="button" role="option" data-exp="10plus" onclick="pickExperience('10plus')">10+</button>
+          </div>
+        </div>
         <div class="search-input" style="max-width:200px">
-          <span class="search-icon">📍</span>
+          <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
           <input type="text" id="searchLoc" placeholder="Location..." onkeydown="if(event.key==='Enter')doSearch()">
         </div>
         <button class="btn btn-green search-btn" onclick="doSearch()">Search</button>
@@ -393,16 +501,32 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
         <button class="cat-tab" data-cat="full-time" onclick="setCat('full-time')">Full-time</button>
         <button class="cat-tab" data-cat="contract" onclick="setCat('contract')">Contract</button>
         <button class="cat-tab" data-cat="internship" onclick="setCat('internship')">Internship</button>
-        <button class="cat-tab" data-cat="cap-exempt" onclick="setCat('cap-exempt')">🏛 Cap Exempt</button>
-        <button class="cat-tab" data-cat="startup" onclick="setCat('startup')">🚀 Startups</button>
-        <button class="cat-tab" data-cat="visa" onclick="setCat('visa')">🌐 Visa Sponsoring</button>
+        <button class="cat-tab" data-cat="cap-exempt" onclick="setCat('cap-exempt')">Cap Exempt</button>
+        <button class="cat-tab" data-cat="startup" onclick="setCat('startup')">Startups</button>
+        <button class="cat-tab" data-cat="visa" onclick="setCat('visa')">Visa Sponsoring</button>
+      </div>
+
+      <!-- Experience Tabs -->
+      <div class="exp-tabs" id="expTabs">
+        <button class="exp-tab active" data-exp="" onclick="setExperience('')">Any</button>
+        <button class="exp-tab" data-exp="0" onclick="setExperience('0')">0</button>
+        <button class="exp-tab" data-exp="1" onclick="setExperience('1')">1</button>
+        <button class="exp-tab" data-exp="2" onclick="setExperience('2')">2</button>
+        <button class="exp-tab" data-exp="3" onclick="setExperience('3')">3</button>
+        <button class="exp-tab" data-exp="4" onclick="setExperience('4')">4</button>
+        <button class="exp-tab" data-exp="5" onclick="setExperience('5')">5</button>
+        <button class="exp-tab" data-exp="6" onclick="setExperience('6')">6</button>
+        <button class="exp-tab" data-exp="7" onclick="setExperience('7')">7</button>
+        <button class="exp-tab" data-exp="8" onclick="setExperience('8')">8</button>
+        <button class="exp-tab" data-exp="9" onclick="setExperience('9')">9</button>
+        <button class="exp-tab" data-exp="10plus" onclick="setExperience('10plus')">10+</button>
       </div>
 
       <!-- Tier Tabs (shown after resume upload) -->
       <div id="tierTabs" class="tier-tabs" style="display:none">
         <button class="tier-tab active" data-tier="all" onclick="setTier('all')">All Jobs</button>
-        <button class="tier-tab" data-tier="high" onclick="setTier('high')">🎯 High Match</button>
-        <button class="tier-tab" data-tier="medium" onclick="setTier('medium')">✦ Good Match</button>
+        <button class="tier-tab" data-tier="high" onclick="setTier('high')">High Match</button>
+        <button class="tier-tab" data-tier="medium" onclick="setTier('medium')">Good Match</button>
         <button class="tier-tab" data-tier="low" onclick="setTier('low')">Low Match</button>
       </div>
 
@@ -423,7 +547,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
     <aside class="ai-column">
       <div style="background:var(--white);border-radius:10px;border:1px solid var(--border);padding:16px;box-shadow:var(--shadow-lg);margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="width:32px;height:32px;border-radius:50%;background:var(--g600);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">🤖</div>
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--g600);display:flex;align-items:center;justify-content:center;color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></div>
           <div>
             <div style="font-size:13px;font-weight:700;color:var(--text)">AI Ninja</div>
             <div style="font-size:11px;color:var(--tx3)">Your career co-pilot</div>
@@ -456,33 +580,14 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 </div>
 </div>
 
-<!-- Payment Modal: $19.99 one-time, discounted to $2.99 (85% off) -->
-<div class="modal-overlay" id="payModal">
-<div class="modal">
-  <p style="color:var(--tx3);font-size:14px;margin-bottom:4px;text-decoration:line-through">$19.99 one-time</p>
-  <div class="price" style="display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap">
-    <span>$2.99</span>
-    <span style="font-size:18px;font-weight:700;color:var(--g600);background:var(--g100);padding:4px 10px;border-radius:8px">85% off</span>
-  </div>
-  <p style="color:var(--tx2);font-size:15px;margin-bottom:4px">One-time payment. <strong>Lifetime access.</strong></p>
-  <ul>
-    <li>Access to live, fresh jobs from all sources</li>
-    <li>Only jobs from the last 48 hours stay visible</li>
-    <li>Automatic refresh every 5 minutes while you hunt</li>
-    <li>Jobs ranked and matched according to your resume</li>
-    <li>Lifetime access to all future job tools and features</li>
-  </ul>
-  <button class="btn btn-green" style="width:100%;padding:14px;font-size:16px" onclick="goCheckout()">Get Lifetime Access — $2.99</button>
-  <div class="remind" onclick="delayPayment()">Remind me later</div>
-</div>
-</div>
-
 <!-- Toasts -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') document.body.classList.remove('nav-open'); });
 let currentUser = null;
-let payTimer = null;
+// On localhost, call Railway directly; on live (jobninjas.live) use relative /api so Netlify proxies
+const API_BASE = (typeof location !== 'undefined' && location.hostname === 'localhost') ? 'https://jobninjaslive-production.up.railway.app' : '';
 let currentPage = 1;
 let currentQ = '';
 let currentLoc = '';
@@ -505,6 +610,7 @@ const ALL_SOURCES = [
 let currentMode = '';
 let currentType = '';
 let currentTier = '';
+let currentExperience = '';
 let currentCat = '';
 let totalJobs = 0;
 let totalPages = 1;
@@ -517,14 +623,14 @@ async function loadUser() {
     currentUser = await r.json();
     if (currentUser.authenticated) {
       renderAuth();
-      if (!currentUser.is_paid) startPaymentTimer();
       if (currentUser.has_resume) showResumeSidebar(currentUser.resume_skills, currentUser.resume_title);
-    } else {
-      startPaymentTimer();
     }
+    const banner = document.getElementById('priceBanner');
+    if (banner) banner.style.display = (currentUser && currentUser.is_paid) ? 'none' : 'flex';
   } catch(e) {
     console.warn('Auth check failed', e);
-    startPaymentTimer();
+    const banner = document.getElementById('priceBanner');
+    if (banner) banner.style.display = 'flex';
   }
 }
 
@@ -546,49 +652,6 @@ async function signOut() {
   document.getElementById('authArea').innerHTML = `<button onclick="window.location.href='/auth/google'" class="btn btn-green btn-sm">Sign in with Google</button>`;
   showToast('Signed out');
   fetchJobs();
-}
-
-// ---- Payment ----
-function startPaymentTimer() {
-  if (currentUser?.is_paid) return;
-  payTimer = setInterval(() => {
-    if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 5 * 60 * 1000); // every 5 min
-}
-
-function delayPayment() {
-  document.getElementById('payModal').classList.remove('open');
-  clearInterval(payTimer);
-  payTimer = setInterval(() => {
-    if (!currentUser?.is_paid) document.getElementById('payModal').classList.add('open');
-  }, 5 * 60 * 1000); // show again in 5 min
-}
-
-async function goCheckout() {
-  if (!currentUser?.authenticated) { window.location.href = '/auth/google'; return; }
-  const r = await fetch('/payments/checkout', { method: 'POST', credentials: 'include' });
-  const d = await r.json();
-  if (d.already_paid) { currentUser.is_paid = true; closePayModal(); showToast('You already have lifetime access!'); return; }
-  if (d.checkout_url) {
-    window.open(d.checkout_url, '_blank');
-    showToast('Complete payment in the new tab...');
-    const poll = setInterval(async () => {
-      const s = await fetch('/payments/status', { credentials: 'include' }).then(r=>r.json());
-      if (s.is_paid) {
-        clearInterval(poll); clearInterval(payTimer);
-        currentUser.is_paid = true;
-        closePayModal();
-        renderAuth();
-        showToast('🎉 Lifetime access unlocked!');
-      }
-    }, 5000);
-  } else {
-    showToast('Payment setup incomplete. Configure DODO_API_KEY in .env');
-  }
-}
-
-function closePayModal() {
-  document.getElementById('payModal').classList.remove('open');
 }
 
 // ---- Resume ----
@@ -680,6 +743,49 @@ function setTier(t) {
   fetchJobs();
 }
 
+const EXP_LABELS = { '': 'Experience', '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '10plus': '10+' };
+
+function updateExpDropdownUI() {
+  var lbl = document.getElementById('expDropdownLabel');
+  if (lbl) lbl.textContent = EXP_LABELS[currentExperience] || 'Experience';
+  var panel = document.getElementById('expDropdownPanel');
+  if (panel) panel.querySelectorAll('[role="option"]').forEach(b => b.classList.toggle('active', (b.dataset.exp || '') === currentExperience));
+}
+
+function setExperience(exp) {
+  currentExperience = exp || '';
+  document.querySelectorAll('.exp-tab').forEach(b => b.classList.toggle('active', (b.dataset.exp || '') === exp));
+  updateExpDropdownUI();
+  var btn = document.getElementById('expDropdownBtn');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  var p = document.getElementById('expDropdownPanel');
+  if (p) p.classList.remove('open');
+  currentPage = 1;
+  fetchJobs();
+}
+
+function toggleExpDropdown() {
+  var panel = document.getElementById('expDropdownPanel');
+  var btn = document.getElementById('expDropdownBtn');
+  var open = panel && panel.classList.toggle('open');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function pickExperience(exp) {
+  setExperience(exp);
+}
+
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('expDropdown');
+  if (dd && !dd.contains(e.target)) {
+    var panel = document.getElementById('expDropdownPanel');
+    if (panel) panel.classList.remove('open');
+    var btn = document.getElementById('expDropdownBtn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+});
+updateExpDropdownUI();
+
 function setCat(c) {
   currentCat = c;
   document.querySelectorAll('.cat-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === c));
@@ -724,6 +830,7 @@ async function fetchJobs() {
   if (currentMode) params.set('mode', currentMode);
   if (currentType) params.set('jtype', currentType);
   if (currentTier) params.set('tier', currentTier);
+  if (currentExperience) params.set('experience', currentExperience);
   if (currentCat) params.set('category', currentCat);
   params.set('page', currentPage);
   params.set('per', PER_PAGE);
@@ -731,7 +838,7 @@ async function fetchJobs() {
   async function doFetch() {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 90000);
-    const r = await fetch(`/api/jobs?${params}`, { credentials: 'include', signal: ctrl.signal });
+    const r = await fetch(`${API_BASE}/api/jobs?${params}`, { credentials: 'include', signal: ctrl.signal });
     clearTimeout(t);
     if (!r.ok) throw new Error(r.status);
     return r.json();
@@ -781,15 +888,15 @@ function renderJobs(jobs) {
         <div class="job-title">${esc(j.title)}</div>
         <div class="job-company">${esc(j.company)} <span>· ${ageLabel(j.scraped_at)}</span></div>
         <div class="job-tags">
-          <span class="job-tag tag-location"><span class="tag-icon">📍</span> ${esc(j.location || 'United States')}</span>
-          <span class="job-tag tag-mode${modeClass}"><span class="tag-icon">🏢</span> ${esc(j.work_mode)}</span>
+          <span class="job-tag tag-location"><span class="tag-icon"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> ${esc(j.location || 'United States')}</span>
+          <span class="job-tag tag-mode${modeClass}"><span class="tag-icon"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M2 20h20v2H2z"/><path d="M5 20V8l7-4 7 4v12"/><path d="M5 12h14"/></svg></span> ${esc(j.work_mode)}</span>
           <span class="job-tag tag-type">${esc(j.job_type)}</span>
           <span class="job-tag tag-source"><span class="src-dot" style="background:${j.source_color}"></span> ${esc(j.source)}</span>
           ${salaryTag}
         </div>
         <div class="job-actions" onclick="event.stopPropagation()">
           <a href="${esc(j.url)}" target="_blank" class="btn-apply">Apply Now</a>
-          <a href="https://jobninjas.ai" target="_blank" class="link-ninja">🤖 Ask AI Ninja</a>
+          <a href="https://jobninjas.ai" target="_blank" class="link-ninja"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg> Ask AI Ninja</a>
         </div>
       </div>
       ${scoreHtml}
@@ -819,8 +926,8 @@ function ageLabel(iso) {
 function openJobModal(j) {
   const body = document.getElementById('jobModalBody');
   const logoHtml = j.company_logo
-    ? `<img src="${j.company_logo}" style="width:48px;height:48px;border-radius:10px;object-fit:contain;background:var(--bg)" alt="" onerror="this.outerHTML='<span style=font-size:32px>🏢</span>'">`
-    : '<span style="font-size:32px">🏢</span>';
+    ? `<img src="${j.company_logo}" style="width:48px;height:48px;border-radius:10px;object-fit:contain;background:var(--bg)" alt="" onerror="this.outerHTML=\'<span class=\"company-placeholder\" style=\"width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg);border-radius:10px\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" stroke=\"var(--tx3)\" fill=\"none\" stroke-width=\"2\"><path d=\"M2 20h20v2H2z\"/><path d=\"M5 20V8l7-4 7 4v12\"/><path d=\"M5 12h14\"/></svg></span>\'">`
+    : '<span class="company-placeholder" style="width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;background:var(--bg);border-radius:10px"><svg viewBox="0 0 24 24" width="24" height="24" stroke="var(--tx3)" fill="none" stroke-width="2"><path d="M2 20h20v2H2z"/><path d="M5 20V8l7-4 7 4v12"/><path d="M5 12h14"/></svg></span>';
 
   let matchChips = '';
   if (j.matched_skills && j.matched_skills.length) {
@@ -839,7 +946,7 @@ function openJobModal(j) {
       <span class="pill">${esc(j.job_type)}</span>
       <span class="pill pill-source"><span class="dot" style="background:${j.source_color}"></span>${esc(j.source)}</span>
       ${j.salary ? `<span class="pill" style="color:var(--g700);font-family:JetBrains Mono,monospace;font-weight:600">${esc(j.salary)}</span>` : ''}
-      <span class="pill">📍 ${esc(j.location)}</span>
+      <span class="pill"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${esc(j.location)}</span>
     </div>
     <div class="tailor-block">
       <p>Tailor your resume for this role — FREE</p>
@@ -877,7 +984,7 @@ function goPage(p) { if (p < 1 || p > totalPages) return; currentPage = p; fetch
 // ---- Stats ----
 async function fetchStats() {
   try {
-    const d = await fetch('/api/stats').then(r => r.json());
+    const d = await fetch(`${API_BASE}/api/stats`).then(r => r.json());
     document.getElementById('statTotal').textContent = d.total.toLocaleString();
     document.getElementById('statSources').textContent = ALL_SOURCES.length;
     const header = document.getElementById('statHeader');
@@ -897,6 +1004,9 @@ function renderSourceFilters(apiSources) {
   (apiSources || []).forEach(s => { countBy[s.name] = s.count; });
   const c = document.getElementById('sourceFilters');
   let html = `<div class="src-filter"><input type="checkbox" id="srcAll" ${currentSources.length===0?'checked':''} onchange="clearSources()"> All Sources</div>`;
+  if (currentSources.length > 0) {
+    html += `<p style="font-size:11px;color:var(--tx3);margin:4px 0 8px;padding-left:4px">Showing ${currentSources.length} source(s) only. Check <strong>All Sources</strong> above to see jobs from every source.</p>`;
+  }
   ALL_SOURCES.forEach(s => {
     const count = countBy[s.name] ?? 0;
     const checked = currentSources.includes(s.name) ? 'checked' : '';
@@ -927,7 +1037,10 @@ function copyLink(url) {
 function checkUrlParams() {
   const p = new URLSearchParams(window.location.search);
   if (p.get('auth') === 'success') showToast('Signed in successfully!');
-  if (p.get('payment') === 'success') showToast('🎉 Payment successful!');
+  if (p.get('payment') === 'success') {
+    showToast('Payment successful!');
+    loadUser();  // refresh so banner hides when webhook has updated is_paid
+  }
   if (p.get('auth') || p.get('payment')) {
     window.history.replaceState({}, '', '/');
   }

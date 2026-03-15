@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>jobNinjas.live — Certifications & Courses</title>
 <link rel="icon" type="image/png" href="jobninjas-logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --g50:#ECFDF5;--g100:#D1FAE5;--g200:#A7F3D0;--g300:#6EE7B7;
   --g400:#34D399;--g500:#10B981;--g600:#059669;--g700:#047857;--g800:#065F46;--g900:#064E3B;
-  --dark:#111827;--dark2:#1F2937;--dark3:#374151;
-  --text:#111827;--tx2:#4B5563;--tx3:#9CA3AF;--tx4:#D1D5DB;
-  --bg:#F3F4F6;--white:#FFFFFF;--border:#E5E7EB;--border2:#D1D5DB;
-  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --primary:#0369A1;--primary-light:#0EA5E9;--cta:#22C55E;
+  --dark:#0C4A6E;--dark2:#075985;--dark3:#0E7490;
+  --text:#0C4A6E;--tx2:#475569;--tx3:#64748B;--tx4:#94A3B8;
+  --bg:#F0F9FF;--white:#FFFFFF;--border:#E2E8F0;--border2:#CBD5E1;
+  --radius:10px;--shadow:0 1px 3px rgba(12,74,110,.06);--shadow-lg:0 4px 12px rgba(12,74,110,.08);
+  --transition:200ms ease;
 }
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:inherit;border:none;outline:none;background:none}
 .mono{font-family:'JetBrains Mono',monospace}
@@ -30,23 +32,32 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .brand-main{color:#05c38f;font-weight:800;font-size:18px}
 .brand-by{color:var(--tx3);font-weight:500;font-size:11px}
 .topnav-links{display:flex;align-items:center;gap:6px}
-.topnav-links a{font-weight:500;color:var(--tx2);font-size:13px;padding:6px 12px;border-radius:6px;transition:.15s}
+.topnav-links a{font-weight:500;color:var(--tx2);font-size:13px;padding:6px 12px;border-radius:6px;transition:background var(--transition),color var(--transition);display:inline-flex;align-items:center;gap:6px}
 .topnav-links a:hover{background:var(--g50);color:var(--g700)}
 .topnav-links a.active{background:var(--g50);color:var(--g700);font-weight:600}
+.topnav-links a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.badge-pro{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--g600);background:var(--g100);padding:2px 5px;border-radius:4px;margin-left:4px;white-space:nowrap}
+.sidebar-item .badge-pro{margin-left:auto;color:var(--g400);background:rgba(16,185,129,.2);padding:2px 6px}
+.nav-menu a .badge-pro{margin-left:6px}
+.topnav-links .icon{display:inline-flex;align-items:center;justify-content:center}
+.topnav-links .icon svg{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2}
 .topnav-right{display:flex;align-items:center;gap:10px}
-.btn{padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn{padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;transition:background var(--transition),color var(--transition);display:inline-flex;align-items:center;gap:6px}
 .btn-green{background:var(--g600);color:#fff}.btn-green:hover{background:var(--g700)}
 .btn-outline{border:1px solid var(--border);color:var(--tx2);background:var(--white)}.btn-outline:hover{border-color:var(--g400);color:var(--g700)}
 .btn-sm{padding:6px 12px;font-size:12px}
 
 .app{display:flex;min-height:calc(100vh - 56px)}
 .sidebar{width:240px;background:var(--dark);color:#fff;display:flex;flex-direction:column;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;flex-shrink:0}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--dark3);border-radius:4px}
 .sidebar-section{padding:16px 16px 8px}
 .sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin-bottom:10px}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:.15s;margin-bottom:2px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:background var(--transition),color var(--transition);margin-bottom:2px}
 .sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .sidebar-item.active{background:var(--g600);color:#fff;font-weight:600}
-.sidebar-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-item .icon{width:20px;height:20px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.sidebar-item .icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
 .sidebar-divider{border-top:1px solid rgba(255,255,255,.08);margin:8px 16px}
 .sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.08);font-size:11px;color:var(--tx3)}
 
@@ -57,22 +68,24 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .chips{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:2px;margin:12px 0 8px}
 .chips::-webkit-scrollbar{height:4px}
 .chips::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
-.chip{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;background:var(--bg);color:var(--tx2);cursor:pointer;transition:.15s;border:1px solid var(--border);white-space:nowrap}
+.chip{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;background:var(--bg);color:var(--tx2);cursor:pointer;transition:background var(--transition),border-color var(--transition),color var(--transition);border:1px solid var(--border);white-space:nowrap}
 .chip:hover,.chip.active{background:var(--g600);color:#fff;border-color:var(--g600)}
 
 .search-row{display:flex;gap:10px;margin-bottom:10px}
 .search-input{flex:1;position:relative}
 .search-input input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--white);transition:.15s}
-.search-input input:focus{border-color:var(--g400);box-shadow:0 0 0 3px rgba(16,185,129,.1);outline:none}
-.search-input .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px}
+.search-input input:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(3,105,161,.15);outline:none}
+.search-input .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3);display:inline-flex;align-items:center;justify-content:center}
+.search-input .search-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
 
 .filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:12px}
-.filter-select{padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--white);color:var(--tx2);cursor:pointer}
-.filter-select:focus{border-color:var(--g400);outline:none}
+.filter-select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:inherit;background:var(--white);color:var(--tx2);cursor:pointer;transition:border-color var(--transition)}
+.filter-select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 2px rgba(3,105,161,.1)}
 
 .tab-row{display:flex;gap:8px;margin:8px 0 12px}
-.tab-btn{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--white);border:1px solid var(--border);color:var(--tx2);cursor:pointer;transition:.15s}
+.tab-btn{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;background:var(--white);border:1px solid var(--border);color:var(--tx2);cursor:pointer;transition:background var(--transition),border-color var(--transition),color var(--transition)}
 .tab-btn.active{background:var(--g600);border-color:var(--g600);color:#fff}
+.tab-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 
 .feed-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:12px;color:var(--tx3)}
 
@@ -80,7 +93,8 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 @media(max-width:1200px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.grid{grid-template-columns:1fr}}
 
-.card{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:6px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;transition:box-shadow var(--transition),border-color var(--transition)}
+.card:hover{box-shadow:var(--shadow-lg);border-color:var(--border2)}
 .card-title{font-size:14px;font-weight:700;color:var(--text)}
 .card-provider{font-size:12px;color:var(--tx2)}
 .card-meta{font-size:11px;color:var(--tx3)}
@@ -91,19 +105,63 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .card-footer{margin-top:6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--tx3)}
 .card-footer a{font-size:11px}
 
-.skeleton{background:linear-gradient(90deg,var(--bg) 25%,var(--border) 50%,var(--bg) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:10px;height:110px}
+.skeleton{background:linear-gradient(90deg,var(--bg) 25%,var(--border) 50%,var(--bg) 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:var(--radius);height:110px}
 @keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
 
 .pagination{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:16px}
-.page-btn{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;background:var(--white);color:var(--tx2);border:1px solid var(--border);transition:.15s}
-.page-btn:hover{border-color:var(--g400)}
+.page-btn{width:36px;height:36px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;background:var(--white);color:var(--tx2);border:1px solid var(--border);transition:background var(--transition),border-color var(--transition),color var(--transition)}
+.page-btn:hover:not(:disabled){border-color:var(--g400);background:var(--g50);color:var(--g700)}
 .page-btn.active{background:var(--g600);color:#fff;border-color:var(--g600)}
 .page-btn:disabled{opacity:.4;cursor:not-allowed}
 .page-info{font-size:12px;color:var(--tx3);margin:0 10px}
 
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* Mobile nav (hamburger + drawer) */
+.nav-toggle{display:none;align-items:center;justify-content:center;width:44px;height:44px;margin-right:-8px;border-radius:var(--radius);color:var(--tx2);background:transparent;transition:background var(--transition),color var(--transition)}
+.nav-toggle:hover,.nav-toggle:focus-visible{background:var(--g50);color:var(--g700);outline:none}
+.nav-toggle svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+.nav-overlay{display:none;position:fixed;inset:0;background:rgba(12,74,110,.3);z-index:98;backdrop-filter:blur(2px)}
+body.nav-open .nav-overlay{display:block}
+.nav-menu{display:none;position:fixed;top:56px;left:0;right:0;bottom:auto;max-height:calc(100vh - 56px);overflow-y:auto;background:var(--white);border-bottom:1px solid var(--border);z-index:99;padding:16px;flex-direction:column;gap:4px;box-shadow:var(--shadow-lg)}
+body.nav-open .nav-menu{display:flex}
+.nav-menu a{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--radius);font-weight:500;color:var(--text);min-height:48px;transition:background var(--transition)}
+.nav-menu a:hover,.nav-menu a.active{background:var(--g50);color:var(--g700)}
+.nav-menu .nav-menu-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin:12px 0 4px;padding:0 16px}
+.nav-menu .nav-menu-label:first-child{margin-top:0}
+
 @media(max-width:900px){
   .sidebar{display:none}
   .main{padding:16px}
+  .topnav-links{display:none}
+  .nav-toggle{display:flex}
+}
+body.nav-open{overflow:hidden}
+
+@media(max-width:900px){
+  .topnav{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+  .main{padding:12px max(16px,env(safe-area-inset-right)) 24px max(16px,env(safe-area-inset-left))}
+  .page-header h1{font-size:18px}
+  .search-row{flex-wrap:wrap;gap:8px}
+  .search-input input{min-height:44px}
+  .search-btn{min-height:44px;flex:1;min-width:120px}
+  .chips{padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  .chip{min-height:44px;padding:10px 14px;font-size:12px}
+  .filter-row{gap:8px}
+  .filter-select{min-height:44px;flex:1;min-width:140px}
+  .tab-btn{min-height:44px;padding:8px 14px}
+  .card{padding:16px}
+  .card-footer .btn{min-height:44px}
+  .pagination{flex-wrap:wrap;gap:6px;padding-bottom:env(safe-area-inset-bottom)}
+  .page-btn{min-width:44px;min-height:44px}
+}
+@media(max-width:480px){
+  .topnav-left{gap:12px}
+  .logo .brand-main{font-size:16px}
+  .logo .brand-by{font-size:10px}
+  .logo-icon{width:28px;height:28px}
+  .page-header h1{font-size:16px}
+  .grid{gap:10px}
 }
 </style>
 </head>
@@ -119,26 +177,38 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
       </div>
     </a>
     <div class="topnav-links">
-      <a href="/"                >🔍 Job Board</a>
-      <a href="/certifications.html" class="active">🎓 Certifications</a>
-      <a href="https://jobninjas.ai" target="_blank">🤖 AI Resume</a>
-      <a href="https://jobninjas.ai" target="_blank">📝 ATS Scanner</a>
-      <a href="https://jobninjas.ai" target="_blank">💼 Products</a>
+      <a href="/"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span> Job Board</a>
+      <a href="/certifications.html" class="active"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span> Certifications</a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></span> AI Resume<span class="badge-pro">Pro</span></a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg></span> ATS Scanner<span class="badge-pro">Pro</span></a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></span> Products<span class="badge-pro">Pro</span></a>
     </div>
   </div>
   <div class="topnav-right">
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" onclick="document.body.classList.toggle('nav-open')">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+    </button>
     <button onclick="window.location.href='/auth/google'" class="btn btn-green btn-sm">Sign in with Google</button>
   </div>
+</nav>
+<div class="nav-overlay" id="navOverlay" aria-hidden="true" onclick="document.body.classList.remove('nav-open')"></div>
+<nav class="nav-menu" id="navMenu" aria-label="Mobile menu">
+  <span class="nav-menu-label">Pages</span>
+  <a href="/" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span> Job Board</a>
+  <a href="/certifications.html" class="active" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span> Certifications</a>
+  <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></span> AI Resume<span class="badge-pro">Pro</span></a>
+  <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg></span> ATS Scanner<span class="badge-pro">Pro</span></a>
+  <a href="https://jobninjas.ai" target="_blank" rel="noopener" title="Subscription features at jobNinjas.ai" onclick="document.body.classList.remove('nav-open')"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></span> Products<span class="badge-pro">Pro</span></a>
 </nav>
 
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Navigation</div>
-      <a href="/" class="sidebar-item"><span class="icon">🔍</span> Jobs / Job Search</a>
-      <div class="sidebar-item active"><span class="icon">🎓</span> Certifications</div>
-      <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">📄</span> Resume Scanner</a>
-      <a href="https://jobninjas.ai" target="_blank" class="sidebar-item"><span class="icon">🤖</span> AI Ninja</a>
+      <a href="/" class="sidebar-item"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span> Jobs / Job Search</a>
+      <div class="sidebar-item active"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span> Certifications</div>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg></span> Resume Scanner<span class="badge-pro">Pro</span></a>
+      <a href="https://jobninjas.ai" target="_blank" rel="noopener" class="sidebar-item" title="Subscription features at jobNinjas.ai"><span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M15 8v4"/><path d="M18 12v.01"/></svg></span> AI Ninja<span class="badge-pro">Pro</span></a>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-footer">
@@ -149,62 +219,47 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
   <main class="main">
     <div class="page-header">
       <h1>Certifications & Courses</h1>
-      <p id="headerInfo">Discover certs and courses that match your role.</p>
+      <p id="headerInfo">Discover 147 learning platforms — certs, courses, and practice sites.</p>
     </div>
 
     <div class="chips">
-      <button class="chip" onclick="quickFilter('AI / Machine Learning')">AI / ML</button>
-      <button class="chip" onclick="quickFilter('Software Engineering')">Software Engineer</button>
-      <button class="chip" onclick="quickFilter('Cloud')">Cloud / DevOps</button>
+      <button class="chip" onclick="quickFilter('AI/ML')">AI / ML</button>
+      <button class="chip" onclick="quickFilter('Cloud')">Cloud</button>
       <button class="chip" onclick="quickFilter('Cybersecurity')">Security</button>
-      <button class="chip" onclick="quickFilter('Data')">Data / Analytics</button>
-      <button class="chip" onclick="quickFilter('Public Health')">Public Health</button>
-      <button class="chip" onclick="quickFilter('Physiotherapy')">Physiotherapy</button>
+      <button class="chip" onclick="quickFilter('Data')">Data</button>
+      <button class="chip" onclick="quickFilter('DevOps')">DevOps</button>
+      <button class="chip" onclick="quickFilter('Web Dev')">Web Dev</button>
+      <button class="chip" onclick="quickFilter('Big Tech')">Big Tech</button>
+      <button class="chip" onclick="quickFilter('Free')">Free</button>
     </div>
 
     <div class="tab-row">
-      <button class="tab-btn active" data-tab="certs" onclick="switchTab('certs')">Certifications</button>
+      <button class="tab-btn active" data-tab="certs" onclick="switchTab('certs')">Platforms</button>
       <button class="tab-btn" data-tab="courses" onclick="switchTab('courses')">Courses (coming soon)</button>
     </div>
 
     <div class="search-row">
       <div class="search-input">
-        <span class="search-icon">🔍</span>
-        <input id="searchQ" placeholder="Search certifications by name, provider, or skill..." onkeydown="if(event.key==='Enter')fetchCerts()">
+        <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+        <input id="searchQ" placeholder="Search by name, category, or topic..." onkeydown="if(event.key==='Enter')applyFilters()">
       </div>
-      <button class="btn btn-green" onclick="fetchCerts()">Search</button>
+      <button class="btn btn-green" onclick="applyFilters()">Search</button>
     </div>
 
     <div class="filter-row">
-      <select id="filterProvider" class="filter-select" onchange="fetchCerts()">
-        <option value="">All providers</option>
-        <option>Google</option>
-        <option>Amazon Web Services</option>
-        <option>IBM</option>
-        <option>DeepLearning.AI</option>
-        <option>Coursera</option>
+      <select id="filterCategory" class="filter-select" onchange="applyFilters()">
+        <option value="">All categories</option>
       </select>
-      <select id="filterPrice" class="filter-select" onchange="fetchCerts()">
+      <select id="filterPrice" class="filter-select" onchange="applyFilters()">
         <option value="">All prices</option>
         <option value="free">Free only</option>
-        <option value="paid">Paid</option>
-      </select>
-      <select id="filterLevel" class="filter-select" onchange="fetchCerts()">
-        <option value="">All levels</option>
-        <option>Beginner</option>
-        <option>Intermediate</option>
-        <option>Advanced</option>
-      </select>
-      <select id="filterMode" class="filter-select" onchange="fetchCerts()">
-        <option value="">Any mode</option>
-        <option>Online</option>
-        <option>On-site</option>
-        <option>Hybrid</option>
+        <option value="paid">Paid only</option>
+        <option value="free_paid">Free & Paid</option>
       </select>
     </div>
 
     <div class="feed-info">
-      <span id="feedInfo">Loading certifications...</span>
+      <span id="feedInfo">Loading platforms...</span>
     </div>
 
     <div id="certList"></div>
@@ -213,100 +268,127 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 </div>
 
 <script>
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') document.body.classList.remove('nav-open'); });
+let allPlatforms = [];
 let currentPage = 1;
-let totalPages = 1;
+const perPage = 18;
 
 function switchTab(tab){
   document.querySelectorAll('.tab-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab===tab);
   });
-  // For now only certs are implemented.
 }
 
 function quickFilter(text){
   document.getElementById('searchQ').value = text;
   currentPage = 1;
-  fetchCerts();
+  applyFilters();
 }
 
-async function fetchCerts(page){
-  if(page){ currentPage = page; }
-  const list = document.getElementById('certList');
-  list.innerHTML = '<div class="grid">' + Array(6).fill('<div class="skeleton"></div>').join('') + '</div>';
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
-  const params = new URLSearchParams();
-  const q = document.getElementById('searchQ').value.trim();
-  if(q) params.set('q', q);
-  const provider = document.getElementById('filterProvider').value;
-  if(provider) params.set('provider', provider);
-  const price = document.getElementById('filterPrice').value;
-  if(price) params.set('price', price);
-  const level = document.getElementById('filterLevel').value;
-  if(level) params.set('level', level);
-  const mode = document.getElementById('filterMode').value;
-  if(mode) params.set('mode', mode);
-  params.set('page', currentPage);
-  params.set('per', 18);
-
-  try{
-    const d = await fetch('/api/certs?'+params.toString()).then(r=>r.json());
-    renderCerts(d.certs || []);
-    totalPages = d.pages || 1;
-    document.getElementById('feedInfo').textContent =
-      d.total ? `Showing ${(currentPage-1)*18+1}–${Math.min(currentPage*18,d.total)} of ${d.total} certifications` :
-                'No certifications found for these filters.';
-    renderPagination(d.total || 0, 18);
-  }catch(e){
-    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Failed to load certifications. Server may be starting up...</p>';
-  }
+function filterPlatforms(){
+  const q = document.getElementById('searchQ').value.trim().toLowerCase();
+  const category = (document.getElementById('filterCategory')||{}).value || '';
+  const price = (document.getElementById('filterPrice')||{}).value || '';
+  return allPlatforms.filter(p=>{
+    if(category && p.category !== category) return false;
+    if(price){
+      const pr = (p.pricing||'').trim();
+      if(price==='free' && pr!=='Free') return false;
+      if(price==='paid' && pr!=='Paid') return false;
+      if(price==='free_paid' && pr!=='Free & Paid') return false;
+    }
+    if(!q) return true;
+    const searchStr = (p.name+' '+p.domain+' '+p.category+' '+(p.topics||[]).join(' ')).toLowerCase();
+    return searchStr.includes(q);
+  });
 }
 
-function renderCerts(items){
+function applyFilters(page){
+  if(page) currentPage = page;
   const list = document.getElementById('certList');
-  if(!items.length){
-    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:60px 0">No certifications found.</p>';
+  if(!allPlatforms.length){
+    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Loading platforms...</p>';
     return;
   }
-  let html = '<div class="grid">';
-  items.forEach(c=>{
-    const free = c.price_type === 'free' || (c.price_text||'').toLowerCase().includes('free');
-    html += `<div class="card">
-      <div class="card-title">${esc(c.title)}</div>
-      <div class="card-provider">${esc(c.provider || c.source || '')}</div>
-      <div class="card-meta">${esc(c.category || '')}${c.level ? ' • '+esc(c.level) : ''}</div>
-      <div class="pill-row">
-        ${c.duration ? `<span class="pill">${esc(c.duration)}</span>` : ''}
-        ${c.mode ? `<span class="pill">${esc(c.mode)}</span>` : ''}
-        ${c.price_text ? `<span class="pill ${free?'price-free':'price-paid'}">${esc(c.price_text)}</span>` : ''}
-      </div>
-      <div class="card-footer">
-        <span>${c.hours_left != null ? `${c.hours_left}h left` : ''}</span>
-        <a href="${esc(c.url)}" target="_blank" class="btn btn-green btn-sm" style="padding:4px 10px;font-size:11px;border-radius:6px">View</a>
-      </div>
-    </div>`;
-  });
-  html += '</div>';
-  list.innerHTML = html;
+  const filtered = filterPlatforms();
+  const total = filtered.length;
+  const start = (currentPage-1)*perPage;
+  const pageItems = filtered.slice(start, start+perPage);
+
+  list.innerHTML = '';
+  if(!pageItems.length){
+    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:60px 0">No platforms match your filters.</p>';
+  } else {
+    let html = '<div class="grid">';
+    pageItems.forEach(p=>{
+      const free = (p.pricing||'').toLowerCase().includes('free');
+      const priceClass = free ? 'price-free' : 'price-paid';
+      const topicsHtml = (p.topics||[]).slice(0,6).map(t=>`<span class="pill">${esc(t)}</span>`).join('');
+      html += `<div class="card">
+        <div class="card-title">${esc(p.name)}</div>
+        <div class="card-provider">${esc(p.domain)}</div>
+        <div class="card-meta">${esc(p.category)}</div>
+        <div class="pill-row">
+          <span class="pill ${priceClass}">${esc(p.pricing)}</span>
+          ${topicsHtml}
+        </div>
+        <div class="card-footer">
+          <span></span>
+          <a href="${esc(p.url)}" target="_blank" rel="noopener" class="btn btn-green btn-sm" style="padding:4px 10px;font-size:11px;border-radius:6px">Visit →</a>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    list.innerHTML = html;
+  }
+
+  document.getElementById('feedInfo').textContent =
+    total ? `Showing ${start+1}–${Math.min(start+perPage,total)} of ${total} platforms` : 'No platforms match your filters.';
+  renderPagination(total, perPage);
 }
 
 function renderPagination(total, per){
   const pg = document.getElementById('pagination');
   if(!total || total <= per){ pg.innerHTML=''; return; }
-  let html = `<button class="page-btn" onclick="fetchCerts(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
   const maxPages = Math.max(1, Math.ceil(total/per));
   const start = Math.max(1, currentPage-2);
   const end = Math.min(maxPages, start+4);
+  let html = `<button class="page-btn" onclick="applyFilters(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
   for(let i=start;i<=end;i++){
-    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="fetchCerts(${i})">${i}</button>`;
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="applyFilters(${i})">${i}</button>`;
   }
   html += `<span class="page-info">${currentPage} / ${maxPages}</span>`;
-  html += `<button class="page-btn" onclick="fetchCerts(${currentPage+1})" ${currentPage===maxPages?'disabled':''}>›</button>`;
+  html += `<button class="page-btn" onclick="applyFilters(${currentPage+1})" ${currentPage===maxPages?'disabled':''}>›</button>`;
   pg.innerHTML = html;
 }
 
-function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
-
-fetchCerts();
+(async function init(){
+  const list = document.getElementById('certList');
+  list.innerHTML = '<div class="grid">' + Array(6).fill('<div class="skeleton"></div>').join('') + '</div>';
+  try {
+    const res = await fetch('data/cert-platforms.json');
+    if(!res.ok) throw new Error(res.statusText);
+    allPlatforms = await res.json();
+  } catch(e) {
+    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Could not load platforms. Try refreshing.</p>';
+    document.getElementById('feedInfo').textContent = 'Failed to load platforms.';
+    return;
+  }
+  const categories = [...new Set(allPlatforms.map(p=>p.category).filter(Boolean))].sort();
+  const catSelect = document.getElementById('filterCategory');
+  if(catSelect){
+    categories.forEach(c=>{
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      catSelect.appendChild(opt);
+    });
+  }
+  currentPage = 1;
+  applyFilters();
+})();
 </script>
 </body>
 </html>

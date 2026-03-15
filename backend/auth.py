@@ -105,7 +105,7 @@ async def google_callback(code: str):
                 user.is_admin = True
         await db.commit()
         await db.refresh(user)
-        token = create_jwt(user.id, user.email, user.is_paid, user.is_admin)
+        token = create_jwt(user.id, user.email, user.is_active_paid(), user.is_admin)
 
     resp = RedirectResponse(url="/?auth=success")
     resp.set_cookie("jn_token", token, max_age=JWT_EXPIRE_HOURS*3600,
@@ -128,7 +128,7 @@ async def get_me(request: Request):
         return {
             "authenticated": True, "id": user.id,
             "email": user.email, "name": user.name,
-            "avatar_url": user.avatar_url, "is_paid": user.is_paid,
+            "avatar_url": user.avatar_url, "is_paid": user.is_active_paid(),
             "is_admin": user.is_admin, "has_resume": bool(user.resume_text),
             "resume_skills": user.skills_list(), "resume_title": user.resume_title or "",
             "paid_at": user.paid_at.isoformat() if user.paid_at else None,
@@ -153,8 +153,8 @@ async def get_token(request: Request):
         if not user:
             raise HTTPException(401, "User not found")
         # Issue a new token in case roles/payment changed
-        token = create_jwt(user.id, user.email, user.is_paid, user.is_admin)
-        return {"token": token, "is_paid": user.is_paid, "is_admin": user.is_admin}
+        token = create_jwt(user.id, user.email, user.is_active_paid(), user.is_admin)
+        return {"token": token, "is_paid": user.is_active_paid(), "is_admin": user.is_admin}
 
 @router.post("/logout")
 async def logout(response: Response):

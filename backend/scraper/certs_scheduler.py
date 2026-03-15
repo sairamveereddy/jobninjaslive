@@ -1,9 +1,9 @@
 """
-Basic certification seeder for jobninjas.live
+Certification and courses seeder for jobninjas.live
 
-For v1 we use a curated list of high‑quality certs across AI/ML,
-software, cloud, security and healthcare. These are treated like
-scraped data and refreshed every 48h so we can evolve the list
+Runs every 24 hours. Uses a curated list of high‑quality certs
+across AI/ML, software, cloud, security and healthcare. Data is
+treated like scraped content with expiry so the list can evolve
 without schema changes.
 """
 
@@ -140,7 +140,7 @@ CURATED_CERTS: List[Dict] = [
 
 
 async def run_cert_scrape_cycle() -> int:
-    """Seed / refresh curated certifications with 48h expiry."""
+    """Seed / refresh curated certifications and courses (runs every 24h; 48h expiry)."""
     now = datetime.utcnow()
     expires = now + timedelta(hours=48)
     new_count = updated = purged = 0

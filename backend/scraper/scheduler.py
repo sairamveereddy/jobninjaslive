@@ -351,20 +351,31 @@ def _browser_available():
     return _BROWSER_OK
 
 
-async def _bfetch(url, timeout_sec=45):
+async def _bfetch(url, timeout_sec=50, retries=2):
+    """Fetch URL with StealthyFetcher (patchright/Chromium). Uses async_fetch for better async behavior."""
     if not _browser_available():
         return None
-    try:
-        from scrapling.fetchers import StealthyFetcher
-        page = await asyncio.wait_for(
-            asyncio.to_thread(StealthyFetcher.fetch, url, headless=True, network_idle=True),
-            timeout=timeout_sec,
-        )
-        return page
-    except asyncio.TimeoutError:
-        log.warning(f"[Browser] timeout {url[:80]}")
-    except Exception as e:
-        log.warning(f"[Browser] {type(e).__name__}: {e}")
+    from scrapling.fetchers import StealthyFetcher
+    timeout_ms = min(timeout_sec * 1000, 60000)
+    for attempt in range(retries + 1):
+        try:
+            page = await asyncio.wait_for(
+                StealthyFetcher.async_fetch(
+                    url,
+                    headless=True,
+                    network_idle=True,
+                    timeout=timeout_ms,
+                    disable_resources=True,
+                ),
+                timeout=timeout_sec + 10,
+            )
+            return page
+        except asyncio.TimeoutError:
+            log.warning(f"[Browser] timeout attempt {attempt + 1}/{retries + 1} {url[:70]}")
+        except Exception as e:
+            log.warning(f"[Browser] attempt {attempt + 1}/{retries + 1} {type(e).__name__}: {e}")
+        if attempt < retries:
+            await asyncio.sleep(2)
     return None
 
 
@@ -948,7 +959,7 @@ def create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=120, max_instances=1,
     )
     s.add_job(
-        run_cert_scrape_cycle, "interval", hours=6,
+        run_cert_scrape_cycle, "interval", hours=24,
         id="certs", replace_existing=True,
         misfire_grace_time=600, max_instances=1,
     )

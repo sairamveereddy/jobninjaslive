@@ -23,3 +23,10 @@
   status = 200
   force = true
 
+# Proxy admin API to backend (stats, users, payments, scrape)
+[[redirects]]
+  from = "/admin/*"
+  to = "https://jobninjaslive-production.up.railway.app/admin/:splat"
+  status = 200
+  force = true
+
