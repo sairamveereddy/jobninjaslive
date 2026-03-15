@@ -353,24 +353,24 @@ async def get_jobs(
         async with _seed_on_empty_lock:
             global _seed_on_empty_done
             if not _seed_on_empty_done:
-                log.info("API saw 0 jobs; running on-demand API-only cycle (all 6 sources)...")
+                log.info("API saw 0 jobs; running Remotive seed first, then API-only cycle...")
+                try:
+                    await seed_remotive_jobs()
+                    did_seed = True
+                except Exception as e:
+                    log.warning("Remotive seed failed: %s", e)
                 try:
                     await asyncio.wait_for(run_api_only_cycle(), timeout=90.0)
                     _seed_on_empty_done = True
                     did_seed = True
                 except asyncio.TimeoutError:
-                    log.warning("On-demand API cycle timed out; trying Remotive seed.")
-                    await seed_remotive_jobs()
+                    log.warning("On-demand API cycle timed out.")
                     _seed_on_empty_done = True
                     did_seed = True
                 except Exception as e:
-                    log.warning("On-demand API cycle failed: %s; trying Remotive seed.", e)
-                    try:
-                        await seed_remotive_jobs()
-                        _seed_on_empty_done = True
-                        did_seed = True
-                    except Exception as e2:
-                        log.warning("Remotive seed also failed: %s", e2)
+                    log.warning("On-demand API cycle failed: %s", e)
+                    _seed_on_empty_done = True
+                    did_seed = True
         if did_seed:
             async with AsyncSessionLocal() as db2:
                 total = (await db2.execute(
@@ -416,8 +416,14 @@ async def get_jobs(
     start = (page - 1) * per
     jobs  = jobs[start:start + per]
 
+    # When 0 jobs with no filters, backend may still be seeding (cold start)
+    empty_reason = None
+    if total == 0 and not (q or location or (source and source != "all") or mode or jtype or category or experience):
+        empty_reason = "loading"
+
     return {"total": total, "page": page, "pages": max(1,(total+per-1)//per),
-            "has_resume": bool(user_skills), "user_title": user_title, "jobs": jobs}
+            "has_resume": bool(user_skills), "user_title": user_title, "jobs": jobs,
+            "empty_reason": empty_reason}
 
 @app.get("/api/stats")
 async def get_stats():

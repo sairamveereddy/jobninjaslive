@@ -844,7 +844,7 @@ async function fetchJobs() {
       document.getElementById('tierTabs').style.display = 'flex';
     }
 
-    renderJobs(d.jobs);
+    renderJobs(d.jobs, d.empty_reason);
     renderPagination();
     document.getElementById('feedInfo').textContent = `Showing ${(currentPage-1)*PER_PAGE+1}–${Math.min(currentPage*PER_PAGE, totalJobs)} of ${totalJobs.toLocaleString()} jobs`;
   } catch(e) {
@@ -852,10 +852,14 @@ async function fetchJobs() {
   }
 }
 
-function renderJobs(jobs) {
+function renderJobs(jobs, emptyReason) {
   const list = document.getElementById('jobList');
   if (!jobs.length) {
-    list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:60px 0">No jobs found matching your filters.</p>';
+    if (emptyReason === 'loading') {
+      list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:60px 0">Jobs are still loading from our sources. Please <a href="javascript:location.reload()" style="color:var(--g600);font-weight:600">refresh in a minute</a>.</p>';
+    } else {
+      list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:60px 0">No jobs found matching your filters.</p>';
+    }
     return;
   }
   let html = '<div class="job-grid">';
