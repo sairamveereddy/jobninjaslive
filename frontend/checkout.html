@@ -85,7 +85,13 @@ ul{margin:20px 0;padding-left:20px;color:var(--tx2);font-size:14px;line-height:1
         return;
       }
       if (!r.ok) {
-        msg.textContent = 'Payment unavailable. Please try again in a moment.';
+        var errText = 'Payment unavailable. Please try again in a moment.';
+        try {
+          var errBody = await r.json();
+          if (errBody.detail) errText = typeof errBody.detail === 'string' ? errBody.detail : (errBody.detail.msg || errBody.detail.message || errText);
+        } catch (_) {}
+        if (r.status === 503) errText = errText || 'Payment is not configured yet. Please try again later.';
+        msg.textContent = errText;
         msg.className = 'err';
         btn.disabled = false;
         btn.textContent = 'Pay $4.99 — Get 1 year access';

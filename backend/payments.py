@@ -85,8 +85,15 @@ async def create_checkout(request: Request):
         return {"checkout_url": checkout_url}
 
     except httpx.HTTPStatusError as e:
-        log.warning("Dodo checkout error: %s %s", e.response.status_code, e.response.text)
-        raise HTTPException(502, f"Payment provider error: {e.response.text[:200]}")
+        err_msg = (e.response.text or str(e))[:300]
+        log.warning("Dodo checkout error: %s %s", e.response.status_code, err_msg)
+        raise HTTPException(502, f"Payment provider error: {err_msg}")
+    except httpx.RequestError as e:
+        log.warning("Dodo request failed: %s", e)
+        raise HTTPException(502, "Payment provider unreachable. Try again in a moment.")
+    except Exception as e:
+        log.exception("Checkout failed: %s", e)
+        raise HTTPException(502, f"Checkout failed: {str(e)[:200]}")
 
 def _verify_sig(body: bytes, sig_header: str) -> bool:
     # Optional: run without DODO_WEBHOOK_SECRET; webhook still processes payment.succeeded
