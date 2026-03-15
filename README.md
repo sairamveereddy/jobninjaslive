@@ -155,3 +155,4 @@ allow_origins=["https://jobninjas.live"]
   - Add small randomized `asyncio.sleep` delays in scrapers
   - Use rotating proxies for LinkedIn / Indeed / Glassdoor
 
+
