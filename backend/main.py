@@ -391,11 +391,7 @@ async def get_jobs(
         rows = [r for r in rows if _match_experience(experience, r)]
         total = len(rows)
 
-    # Diversify by source first so the first page shows jobs from many sources (not just Greenhouse)
-    rows = _diversify(rows, lambda j: (j.source or "").strip(), max_per_round=3)
-    # Then diversify by company so we don't get too many from the same company
-    rows = _diversify(rows, lambda j: (j.company or "").lower(), max_per_round=2)
-
+    # Keep newest jobs on top (no diversification — strict scraped_at desc)
     jobs = [{
         "id": j.id, "title": j.title, "company": j.company, "company_logo": j.company_logo,
         "location": j.location, "salary": j.salary, "job_type": j.job_type,

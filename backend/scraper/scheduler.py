@@ -1,9 +1,10 @@
 """
 jobninjas.live — Job Scrapers (USA Only)
 ────────────────────────────────────────
-API (every 5 min):     Remotive · Arbeitnow · The Muse · Jobicy · FindWork · Greenhouse
+API (every 5 min):     Remotive · Arbeitnow · The Muse · Jobicy · FindWork · Greenhouse · MAANG
 Browser (every 5 min): LinkedIn · Indeed · Dice · ZipRecruiter · Monster · Glassdoor
 
+MAANG = Meta, Apple, Amazon, Netflix, Google (official career sites; Amazon via API, others via browser).
 All results filtered to USA. Jobs auto-expire after 48 h.
 Browser scrapers use Scrapling StealthyFetcher via asyncio.to_thread.
 """
@@ -330,6 +331,153 @@ async def scrape_greenhouse(http):
         await asyncio.sleep(0.3)
     log.info(f"[Greenhouse] {len(jobs)}")
     return jobs
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  MAANG  (Meta, Apple, Amazon, Netflix, Google — official career sites)
+# ═══════════════════════════════════════════════════════════════════
+
+MAANG_SOURCE = "MAANG"
+MAANG_COLOR = "#6366F1"
+
+async def scrape_maang_amazon(http):
+    """Amazon jobs via public search.json API (USA)."""
+    jobs = []
+    for offset in [0, 100, 200]:
+        try:
+            async with http.get(
+                f"https://www.amazon.jobs/en/search.json?offset={offset}&result_limit=100",
+                timeout=TIMEOUT,
+            ) as r:
+                if r.status != 200:
+                    break
+                data = await r.json(content_type=None)
+                for it in data.get("jobs") or []:
+                    if it.get("country_code") != "USA":
+                        continue
+                    title = it.get("job_title") or it.get("title") or ""
+                    company = it.get("company_name") or "Amazon"
+                    path = it.get("job_path") or it.get("job_id") or ""
+                    if not title or not path:
+                        continue
+                    url = path if path.startswith("http") else f"https://www.amazon.jobs{path}" if path.startswith("/") else f"https://www.amazon.jobs/en/jobs/{path}"
+                    city = it.get("city") or ""
+                    state = it.get("state") or it.get("state_code") or ""
+                    loc = ", ".join(filter(None, [city, state, "USA"])) or "United States"
+                    jobs.append({
+                        "id": make_id(title, company, url),
+                        "title": title, "company": company, "company_logo": "",
+                        "location": loc, "salary": it.get("salary") or "",
+                        "job_type": norm_type(it.get("schedule_type") or it.get("employee_class") or ""),
+                        "work_mode": detect_mode(loc + " " + (it.get("job_type") or "")),
+                        "description": strip_html(it.get("description") or ""),
+                        "url": url, "source": MAANG_SOURCE, "source_color": MAANG_COLOR,
+                        "tags": json.dumps((it.get("business_category") or "").split()[:5]),
+                    })
+        except Exception as e:
+            log.warning(f"[MAANG/Amazon] {e}")
+        await asyncio.sleep(0.5)
+    return jobs
+
+
+async def _scrape_maang_browser():
+    """Meta, Apple, Netflix, Google career pages via browser (USA-focused)."""
+    if not _browser_available():
+        return []
+    out = []
+    # Meta (metacareers.com)
+    try:
+        page = await _bfetch("https://www.metacareers.com/jobs?q=engineer&locations[]=USA")
+        if page:
+            for a in page.css('a[href*="/jobs/"]'):
+                href = a.attrib.get("href", "") if hasattr(a, "attrib") else ""
+                title = _txt(a)
+                if not title or len(title) < 5:
+                    continue
+                if not href.startswith("http"):
+                    href = "https://www.metacareers.com" + href
+                out.append({
+                    "id": make_id(title, "Meta", href),
+                    "title": title[:200], "company": "Meta", "company_logo": "",
+                    "location": "United States", "salary": "", "job_type": "Full-time",
+                    "work_mode": "On-site", "description": "", "url": href,
+                    "source": MAANG_SOURCE, "source_color": MAANG_COLOR, "tags": "[]",
+                })
+    except Exception as e:
+        log.warning(f"[MAANG/Meta] {e}")
+    await asyncio.sleep(2)
+    # Apple (jobs.apple.com)
+    try:
+        page = await _bfetch("https://jobs.apple.com/en-us/search?search=software%20engineer&sort=relevance")
+        if page:
+            for a in page.css('a[href*="/en-us/details/"], a[href*="/details/"]'):
+                href = a.attrib.get("href", "") if hasattr(a, "attrib") else ""
+                title = _txt(a)
+                if not title or len(title) < 5:
+                    continue
+                if not href.startswith("http"):
+                    href = "https://jobs.apple.com" + href
+                out.append({
+                    "id": make_id(title, "Apple", href),
+                    "title": title[:200], "company": "Apple", "company_logo": "",
+                    "location": "United States", "salary": "", "job_type": "Full-time",
+                    "work_mode": "On-site", "description": "", "url": href,
+                    "source": MAANG_SOURCE, "source_color": MAANG_COLOR, "tags": "[]",
+                })
+    except Exception as e:
+        log.warning(f"[MAANG/Apple] {e}")
+    await asyncio.sleep(2)
+    # Netflix (jobs.netflix.com)
+    try:
+        page = await _bfetch("https://jobs.netflix.com/search?q=engineer")
+        if page:
+            for a in page.css('a[href*="/jobs/"]'):
+                href = a.attrib.get("href", "") if hasattr(a, "attrib") else ""
+                title = _txt(a)
+                if not title or len(title) < 5:
+                    continue
+                if not href.startswith("http"):
+                    href = "https://jobs.netflix.com" + href
+                out.append({
+                    "id": make_id(title, "Netflix", href),
+                    "title": title[:200], "company": "Netflix", "company_logo": "",
+                    "location": "United States", "salary": "", "job_type": "Full-time",
+                    "work_mode": "On-site", "description": "", "url": href,
+                    "source": MAANG_SOURCE, "source_color": MAANG_COLOR, "tags": "[]",
+                })
+    except Exception as e:
+        log.warning(f"[MAANG/Netflix] {e}")
+    await asyncio.sleep(2)
+    # Google (careers.google.com)
+    try:
+        page = await _bfetch("https://careers.google.com/jobs/results/?location=United%20States&q=software%20engineer")
+        if page:
+            for a in page.css('a[href*="/jobs/results/"]'):
+                href = a.attrib.get("href", "") if hasattr(a, "attrib") else ""
+                title = _txt(a)
+                if not title or len(title) < 3:
+                    continue
+                if not href.startswith("http"):
+                    href = "https://careers.google.com" + href
+                out.append({
+                    "id": make_id(title, "Google", href),
+                    "title": title[:200], "company": "Google", "company_logo": "",
+                    "location": "United States", "salary": "", "job_type": "Full-time",
+                    "work_mode": "On-site", "description": "", "url": href,
+                    "source": MAANG_SOURCE, "source_color": MAANG_COLOR, "tags": "[]",
+                })
+    except Exception as e:
+        log.warning(f"[MAANG/Google] {e}")
+    return out
+
+
+async def scrape_maang(http):
+    """Aggregate MAANG jobs: Amazon via API, Meta/Apple/Netflix/Google via browser."""
+    amazon_jobs = await scrape_maang_amazon(http)
+    browser_jobs = await _scrape_maang_browser()
+    all_jobs = amazon_jobs + browser_jobs
+    log.info(f"[MAANG] {len(amazon_jobs)} Amazon + {len(browser_jobs)} browser = {len(all_jobs)}")
+    return all_jobs
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -826,12 +974,13 @@ async def _run_browser_scrapers():
 # ═══════════════════════════════════════════════════════════════════
 
 async def _api_group():
-    """Run all 6 API scrapers (Remotive, Arbeitnow, The Muse, Jobicy, FindWork, Greenhouse)."""
+    """Run all API scrapers (Remotive, Arbeitnow, The Muse, Jobicy, FindWork, Greenhouse, MAANG)."""
     async with aiohttp.ClientSession(headers=HDR) as http:
         results = await asyncio.gather(
             scrape_remotive(http), scrape_arbeitnow(http),
             scrape_themuse(http), scrape_jobicy(http),
             scrape_findwork(http), scrape_greenhouse(http),
+            scrape_maang(http),
             return_exceptions=True,
         )
     out = []
