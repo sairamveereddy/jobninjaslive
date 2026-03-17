@@ -21,9 +21,30 @@
   --transition:200ms ease;
 }
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px}
+body.authgate-open{overflow:hidden}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:inherit;border:none;outline:none;background:none}
 .mono{font-family:'JetBrains Mono',monospace}
+
+/* ─── Auth Gate (required login) ─── */
+.authgate-overlay{position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:10000;padding:24px}
+.authgate-card{width:min(640px, calc(100vw - 48px));background:linear-gradient(135deg,#0f172a,#020617);border-radius:18px;box-shadow:0 24px 80px rgba(15,23,42,.8);padding:26px 26px 22px;color:#e5e7eb;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px}
+.authgate-main{display:flex;flex-direction:column;gap:10px}
+.authgate-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:rgba(34,197,94,.14);color:#bbf7d0;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.authgate-pill span.badge{width:6px;height:6px;border-radius:999px;background:#22c55e}
+.authgate-title{font-size:20px;font-weight:800;letter-spacing:-.2px}
+.authgate-sub{color:#cbd5f5;font-size:13px;max-width:360px}
+.authgate-metrics{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.authgate-metric{padding:6px 10px;border-radius:999px;background:rgba(15,23,42,.9);border:1px solid rgba(148,163,184,.35);font-size:11px;color:#e5e7eb}
+.authgate-side{background:rgba(15,23,42,.8);border-radius:14px;border:1px solid rgba(148,163,184,.3);padding:14px;display:flex;flex-direction:column;gap:10px}
+.authgate-list{margin:0;padding-left:16px;font-size:12px;color:#cbd5f5}
+.authgate-list li{margin-bottom:4px}
+.authgate-list strong{font-weight:700}
+.authgate-cta{margin-top:8px}
+.authgate-foot{color:#9ca3af;font-size:11px;margin-top:8px;text-align:left}
+@media(max-width:720px){
+  .authgate-card{grid-template-columns:minmax(0,1fr);padding:20px}
+}
 
 /* ─── Top Navbar ─── */
 .topnav{background:var(--white);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
@@ -567,6 +588,40 @@ body.nav-open{overflow:hidden}
 <!-- Toasts -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Auth Gate Modal (required) -->
+<div class="authgate-overlay" id="authGate" aria-hidden="true">
+  <div class="authgate-card" role="dialog" aria-modal="true" aria-label="Sign in to jobNinjas.live">
+    <div class="authgate-main">
+      <div class="authgate-pill"><span class="badge"></span> Live job feed · PRO preview</div>
+      <div class="authgate-title">Sign in to unlock the job board</div>
+      <div class="authgate-sub">
+        jobNinjas.live searches <strong>13 live job sources</strong> every 5 minutes and keeps only jobs from the last 48 hours.
+        Create a free account with Google to see everything matched to your profile.
+      </div>
+      <div class="authgate-metrics">
+        <div class="authgate-metric">13 sources (MAANG, LinkedIn, Indeed, Greenhouse, …)</div>
+        <div class="authgate-metric">5,000+ active jobs in the last 48h</div>
+        <div class="authgate-metric">Smart filters for role, experience, and location</div>
+      </div>
+    </div>
+    <div class="authgate-side">
+      <ul class="authgate-list">
+        <li><strong>Live jobs only</strong> — stale or expired roles are removed automatically.</li>
+        <li><strong>Direct links</strong> to official company job pages (no recruiters or reposts).</li>
+        <li><strong>1‑year access</strong> to all 13 sources when you upgrade to PRO.</li>
+      </ul>
+      <div class="authgate-cta">
+        <button class="btn btn-green" style="width:100%" onclick="window.location.href='/auth/google'">
+          Continue with Google
+        </button>
+      </div>
+      <div class="authgate-foot">
+        Already have an account? Continue with the same Google email to sign in.
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') document.body.classList.remove('nav-open'); });
 let currentUser = null;
@@ -600,15 +655,42 @@ let currentCat = '';
 let totalJobs = 0;
 let totalPages = 1;
 const PER_PAGE = 20;
+let authGateTimer = null;
 
 // ---- Auth ----
+function showAuthGate() {
+  const gate = document.getElementById('authGate');
+  if (gate) {
+    gate.setAttribute('aria-hidden', 'false');
+    gate.style.display = 'flex';
+    document.body.classList.add('authgate-open');
+  }
+}
+
+function hideAuthGate() {
+  const gate = document.getElementById('authGate');
+  if (gate) {
+    gate.setAttribute('aria-hidden', 'true');
+    gate.style.display = 'none';
+    document.body.classList.remove('authgate-open');
+  }
+}
+
 async function loadUser() {
   try {
     const r = await fetch('/auth/me', { credentials: 'include' });
     currentUser = await r.json();
     if (currentUser.authenticated) {
+      if (authGateTimer) { clearTimeout(authGateTimer); authGateTimer = null; }
       renderAuth();
       if (currentUser.has_resume) showResumeSidebar(currentUser.resume_skills, currentUser.resume_title);
+      hideAuthGate();
+    } else {
+      if (!authGateTimer) {
+        authGateTimer = setTimeout(() => {
+          if (!currentUser || !currentUser.authenticated) showAuthGate();
+        }, 5000);
+      }
     }
     const banner = document.getElementById('priceBanner');
     if (banner) banner.style.display = (currentUser && currentUser.is_paid) ? 'none' : 'flex';
@@ -616,6 +698,11 @@ async function loadUser() {
     console.warn('Auth check failed', e);
     const banner = document.getElementById('priceBanner');
     if (banner) banner.style.display = 'flex';
+    if (!authGateTimer) {
+      authGateTimer = setTimeout(() => {
+        if (!currentUser || !currentUser.authenticated) showAuthGate();
+      }, 5000);
+    }
   }
 }
 
@@ -1059,10 +1146,13 @@ function startCountdown() {
 
 // ---- Init ----
 checkUrlParams();
-loadUser();
-fetchStats();
-fetchJobs();
-startCountdown();
+(async function init() {
+  await loadUser();
+  if (!currentUser || !currentUser.authenticated) return;
+  fetchStats();
+  fetchJobs();
+  startCountdown();
+})();
 </script>
 </body>
 </html>
