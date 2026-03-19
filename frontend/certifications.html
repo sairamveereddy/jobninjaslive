@@ -19,9 +19,26 @@
   --transition:200ms ease;
 }
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:14px}
+body.authgate-open{overflow:hidden}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:inherit;border:none;outline:none;background:none}
 .mono{font-family:'JetBrains Mono',monospace}
+
+/* ─── Auth Gate (required login) ─── */
+.authgate-overlay{position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:10000;padding:24px}
+.authgate-card{width:min(640px, calc(100vw - 48px));background:linear-gradient(135deg,#0f172a,#020617);border-radius:18px;box-shadow:0 24px 80px rgba(15,23,42,.8);padding:26px 26px 22px;color:#e5e7eb;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px}
+.authgate-main{display:flex;flex-direction:column;gap:10px}
+.authgate-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:rgba(34,197,94,.14);color:#bbf7d0;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.authgate-pill span.badge{width:6px;height:6px;border-radius:999px;background:#22c55e}
+.authgate-title{font-size:20px;font-weight:800;letter-spacing:-.2px}
+.authgate-sub{color:#cbd5f5;font-size:13px;max-width:360px}
+.authgate-side{background:rgba(15,23,42,.8);border-radius:14px;border:1px solid rgba(148,163,184,.3);padding:14px;display:flex;flex-direction:column;gap:10px}
+.authgate-list{margin:0;padding-left:16px;font-size:12px;color:#cbd5f5}
+.authgate-list li{margin-bottom:4px}
+.authgate-list strong{font-weight:700}
+.authgate-cta{margin-top:8px}
+.authgate-foot{color:#9ca3af;font-size:11px;margin-top:8px;text-align:left}
+@media(max-width:720px){.authgate-card{grid-template-columns:minmax(0,1fr);padding:20px}}
 
 .topnav{background:var(--white);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
 .topnav-left{display:flex;align-items:center;gap:32px}
@@ -188,7 +205,9 @@ body.nav-open{overflow:hidden}
     <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" onclick="document.body.classList.toggle('nav-open')">
       <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
     </button>
-    <button onclick="window.location.href='/auth/google'" class="btn btn-green btn-sm">Sign in with Google</button>
+    <div id="authArea">
+      <button onclick="window.location.href='/auth/google?next=' + encodeURIComponent('/certifications.html')" class="btn btn-green btn-sm">Sign in with Google</button>
+    </div>
   </div>
 </nav>
 <div class="nav-overlay" id="navOverlay" aria-hidden="true" onclick="document.body.classList.remove('nav-open')"></div>
@@ -267,8 +286,102 @@ body.nav-open{overflow:hidden}
   </main>
 </div>
 
+<!-- Auth Gate Modal (required) -->
+<div class="authgate-overlay" id="authGate" aria-hidden="true">
+  <div class="authgate-card" role="dialog" aria-modal="true" aria-label="Sign in to jobNinjas.live">
+    <div class="authgate-main">
+      <div class="authgate-pill"><span class="badge"></span> Certifications · PRO preview</div>
+      <div class="authgate-title">Sign in to browse certifications</div>
+      <div class="authgate-sub">
+        Discover certifications and courses across platforms and providers. Sign in with Google to save filters and stay signed in across Jobs and Certifications.
+      </div>
+    </div>
+    <div class="authgate-side">
+      <ul class="authgate-list">
+        <li><strong>Browse providers</strong> — filter by category and pricing.</li>
+        <li><strong>Fast search</strong> — find platforms by skill and topic.</li>
+        <li><strong>One account</strong> — same login everywhere.</li>
+      </ul>
+      <div class="authgate-cta">
+        <button class="btn btn-green" style="width:100%" onclick="window.location.href='/auth/google?next=' + encodeURIComponent('/certifications.html')">
+          Continue with Google
+        </button>
+      </div>
+      <div class="authgate-foot">
+        Already have an account? Continue with the same Google email to sign in.
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') document.body.classList.remove('nav-open'); });
+let currentUser = null;
+let authGateTimer = null;
+
+function showAuthGate() {
+  const gate = document.getElementById('authGate');
+  if (gate) {
+    gate.setAttribute('aria-hidden', 'false');
+    gate.style.display = 'flex';
+    document.body.classList.add('authgate-open');
+  }
+}
+
+function hideAuthGate() {
+  const gate = document.getElementById('authGate');
+  if (gate) {
+    gate.setAttribute('aria-hidden', 'true');
+    gate.style.display = 'none';
+    document.body.classList.remove('authgate-open');
+  }
+}
+
+function renderAuth() {
+  const a = document.getElementById('authArea');
+  if (!a) return;
+  if (currentUser && currentUser.authenticated) {
+    a.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+      <img style="width:30px;height:30px;border-radius:50%;border:2px solid var(--g200)" src="${currentUser.avatar_url || ''}" alt="" onerror="this.style.display='none'">
+      <span style="font-weight:600;font-size:13px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${currentUser.name || currentUser.email}</span>
+      ${currentUser.is_paid ? '<span style="background:var(--g600);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">PRO</span>' : ''}
+      <button class="btn btn-outline btn-xs" onclick="signOut()">Sign Out</button>
+    </div>`;
+  } else {
+    a.innerHTML = `<button onclick="window.location.href='/auth/google?next=' + encodeURIComponent('/certifications.html')" class="btn btn-green btn-sm">Sign in with Google</button>`;
+  }
+}
+
+async function signOut() {
+  await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+  currentUser = null;
+  renderAuth();
+  showAuthGate();
+}
+
+async function loadUser() {
+  try {
+    const r = await fetch('/auth/me', { credentials: 'include' });
+    currentUser = await r.json();
+    renderAuth();
+    if (currentUser.authenticated) {
+      if (authGateTimer) { clearTimeout(authGateTimer); authGateTimer = null; }
+      hideAuthGate();
+      return true;
+    }
+    if (!authGateTimer) {
+      authGateTimer = setTimeout(() => {
+        if (!currentUser || !currentUser.authenticated) showAuthGate();
+      }, 5000);
+    }
+    return false;
+  } catch (e) {
+    renderAuth();
+    if (!authGateTimer) authGateTimer = setTimeout(() => showAuthGate(), 5000);
+    return false;
+  }
+}
+
 let allPlatforms = [];
 let currentPage = 1;
 const perPage = 18;
@@ -365,6 +478,8 @@ function renderPagination(total, per){
 }
 
 (async function init(){
+  const authed = await loadUser();
+  if (!authed) return;
   const list = document.getElementById('certList');
   list.innerHTML = '<div class="grid">' + Array(6).fill('<div class="skeleton"></div>').join('') + '</div>';
   try {

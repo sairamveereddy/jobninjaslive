@@ -55,16 +55,22 @@ def require_admin(request: Request) -> dict:
     return u
 
 @router.get("/google")
-async def google_login():
+async def google_login(next: str = ""):
+    # Use OAuth "state" to carry a safe, relative return path.
+    state = (next or "").strip()
+    if state and (not state.startswith("/") or state.startswith("//")):
+        state = ""
     params = {
         "client_id": GOOGLE_CLIENT_ID, "redirect_uri": GOOGLE_REDIRECT_URI,
         "response_type": "code", "scope": "openid email profile",
         "access_type": "offline", "prompt": "select_account",
     }
+    if state:
+        params["state"] = state
     return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
 
 @router.get("/google/callback")
-async def google_callback(code: str):
+async def google_callback(request: Request, code: str, state: str = ""):
     from database import AsyncSessionLocal
     from models import User
     from sqlalchemy import select
@@ -107,9 +113,25 @@ async def google_callback(code: str):
         await db.refresh(user)
         token = create_jwt(user.id, user.email, user.is_active_paid(), user.is_admin)
 
-    resp = RedirectResponse(url="/?auth=success")
+    # Redirect back to the requested page (if provided via state), otherwise home.
+    redirect_to = (state or "").strip()
+    if redirect_to and (not redirect_to.startswith("/") or redirect_to.startswith("//")):
+        redirect_to = ""
+    if not redirect_to:
+        redirect_to = "/"
+    # Preserve an auth toast across pages
+    if "auth=success" not in redirect_to:
+        redirect_to = redirect_to + ("&" if "?" in redirect_to else "?") + "auth=success"
+
+    forwarded_proto = (request.headers.get("x-forwarded-proto") or "").lower()
+    secure_cookie = bool(
+        os.getenv("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+        or forwarded_proto == "https"
+        or request.url.scheme == "https"
+    )
+    resp = RedirectResponse(url=redirect_to)
     resp.set_cookie("jn_token", token, max_age=JWT_EXPIRE_HOURS*3600,
-                    httponly=True, samesite="lax", secure=False)
+                    httponly=True, samesite="lax", secure=secure_cookie)
     return resp
 
 @router.get("/me")
