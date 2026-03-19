@@ -216,6 +216,20 @@ def _match_experience(experience, job_row):
     """True if job matches experience filter (0, 1, ..., 9, 10plus)."""
     blob = f"{(job_row.title or '')} {(job_row.description or '')}"
     min_y, max_y = _parse_experience_years(blob)
+    # If job doesn't explicitly mention years, infer from common seniority keywords.
+    # This prevents the experience filter from excluding most jobs.
+    if min_y is None and max_y is None:
+        t = (job_row.title or "").lower()
+        if "intern" in t:
+            min_y, max_y = 0, 0
+        elif any(k in t for k in ("entry", "entry-level", "junior", "jr")):
+            min_y, max_y = 0, 1
+        elif any(k in t for k in ("staff", "principal", "distinguished")):
+            min_y, max_y = 10, None
+        elif "senior" in t or re.search(r"\bsr\b", t):
+            min_y, max_y = 5, None
+        elif any(k in t for k in ("lead",)):
+            min_y, max_y = 4, None
     if experience == "10plus":
         if min_y is not None and min_y >= 10:
             return True
@@ -232,8 +246,34 @@ def _match_experience(experience, job_row):
         return True
     # Job requirement overlaps year n: min_y <= n <= max_y (or unbounded side)
     if min_y is None and max_y is None:
-        return False
+        return True
     return (min_y is None or min_y <= n) and (max_y is None or max_y >= n)
+
+
+def _experience_label(job_row):
+    """Human-friendly experience label for UI chips."""
+    blob = f"{(job_row.title or '')} {(job_row.description or '')}"
+    min_y, max_y = _parse_experience_years(blob)
+    if min_y is None and max_y is None:
+        t = (job_row.title or "").lower()
+        if "intern" in t:
+            return "0 yrs"
+        if any(k in t for k in ("entry", "entry-level", "junior", "jr")):
+            return "0–1 yrs"
+        if any(k in t for k in ("staff", "principal", "distinguished")):
+            return "10+ yrs"
+        if "senior" in t or re.search(r"\bsr\b", t):
+            return "5+ yrs"
+        if "lead" in t:
+            return "4+ yrs"
+        return ""
+    if min_y is not None and max_y is not None and min_y != max_y:
+        return f"{min_y}–{max_y} yrs"
+    if min_y is not None and (max_y is None or max_y == min_y):
+        return f"{min_y}+ yrs" if max_y is None else f"{min_y} yrs"
+    if max_y is not None:
+        return f"0–{max_y} yrs"
+    return ""
 
 
 def _match_category(cat, job_row):
@@ -412,6 +452,7 @@ async def get_jobs(
         "work_mode": j.work_mode, "description": (j.description or "")[:300],
         "url": j.url, "source": j.source, "source_color": j.source_color,
         "tags": j.tags_list(), "easy_apply": j.easy_apply,
+        "experience": _experience_label(j),
         "scraped_at": j.scraped_at.isoformat() if j.scraped_at else "",
         "hours_left": round(j.hours_remaining(), 1), "is_featured": j.is_featured,
         "match_score": 0, "match_tier": "none", "matched_skills": [],
@@ -608,6 +649,24 @@ async def get_resume(request: Request):
         return {"has_resume": True, "filename": user.resume_filename,
                 "skills": user.skills_list(), "title": user.resume_title,
                 "uploaded_at": user.resume_uploaded.isoformat() if user.resume_uploaded else None}
+
+
+@app.post("/api/resume/remove")
+async def remove_resume(request: Request):
+    u = get_current_user(request)
+    if not u:
+        raise HTTPException(401, "Sign in required")
+    async with AsyncSessionLocal() as db:
+        user = await db.get(User, u["sub"])
+        if not user:
+            raise HTTPException(404, "User not found")
+        user.resume_filename = None
+        user.resume_text = None
+        user.resume_skills = "[]"
+        user.resume_title = None
+        user.resume_uploaded = None
+        await db.commit()
+    return {"ok": True}
 
 @app.get("/api/health")
 async def health():

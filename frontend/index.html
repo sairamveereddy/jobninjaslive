@@ -175,6 +175,7 @@ button{cursor:pointer;font-family:inherit;border:none;outline:none;background:no
 .job-tag.tag-source{background:var(--bg);color:var(--tx2)}
 .job-tag .src-dot{width:5px;height:5px;border-radius:50%;display:inline-block}
 .job-tag.tag-salary{background:#ECFDF5;color:#065F46;border-color:#A7F3D0;font-family:'JetBrains Mono',monospace;font-weight:600}
+.job-tag.tag-exp{background:#EEF2FF;color:#3730A3;border-color:#C7D2FE;font-family:'JetBrains Mono',monospace;font-weight:600}
 .job-actions{display:flex;align-items:center;gap:10px}
 .job-actions .btn-apply{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;background:var(--g600);color:#fff;transition:.15s}
 .job-actions .btn-apply:hover{background:var(--g700)}
@@ -396,7 +397,10 @@ body.nav-open{overflow:hidden}
       <div class="sub" id="resumeSub">—</div>
       <div class="skill-tags" id="resumeSkills"></div>
       <button class="btn btn-green btn-sm" onclick="setTier('high')" style="width:100%;justify-content:center"><span class="icon" aria-hidden="true" style="display:inline-flex;margin-right:4px"><svg viewBox="0 0 24 24" width="14" height="14"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span> Show High Matches</button>
-      <span style="font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;display:inline-block;margin-top:6px" onclick="document.getElementById('resumeInput').click()">Replace</span>
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:6px">
+        <span style="font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;display:inline-block" onclick="document.getElementById('resumeInput').click()">Replace</span>
+        <span style="font-size:11px;color:#B91C1C;cursor:pointer;text-decoration:underline;display:inline-block" onclick="removeResume()">Remove</span>
+      </div>
     </div>
   </div>
 
@@ -757,8 +761,51 @@ function showResumeSidebar(skills, title) {
   document.getElementById('resumeDone').style.display = 'block';
   document.getElementById('resumeTitle').textContent = title || 'Software Engineer';
   document.getElementById('resumeSub').textContent = `${skills.length} skills detected`;
-  document.getElementById('resumeSkills').innerHTML = skills.slice(0, 8).map(s => `<span class="skill-tag">${s}</span>`).join('');
+  const max = 24;
+  const wrap = document.getElementById('resumeSkills');
+  const showAll = skills.length <= max;
+  const shown = showAll ? skills : skills.slice(0, max);
+  wrap.innerHTML =
+    shown.map(s => `<span class="skill-tag">${s}</span>`).join('') +
+    (showAll ? '' : `<span class="skill-tag" style="background:var(--bg);color:var(--tx2);cursor:pointer" onclick="toggleAllSkills()">+${skills.length - max} more</span>`);
+  window.__allSkills = skills;
+  window.__skillsExpanded = false;
   document.getElementById('tierTabs').style.display = 'flex';
+}
+
+function toggleAllSkills() {
+  const skills = window.__allSkills || [];
+  const wrap = document.getElementById('resumeSkills');
+  if (!wrap) return;
+  window.__skillsExpanded = !window.__skillsExpanded;
+  if (window.__skillsExpanded) {
+    wrap.innerHTML =
+      skills.map(s => `<span class="skill-tag">${s}</span>`).join('') +
+      `<span class="skill-tag" style="background:var(--bg);color:var(--tx2);cursor:pointer" onclick="toggleAllSkills()">Show less</span>`;
+  } else {
+    showResumeSidebar(skills, (currentUser && currentUser.resume_title) || '');
+  }
+}
+
+async function removeResume() {
+  try {
+    const r = await fetch('/api/resume/remove', { method: 'POST', credentials: 'include' });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.detail || 'Failed');
+    if (currentUser) {
+      currentUser.has_resume = false;
+      currentUser.resume_skills = [];
+      currentUser.resume_title = '';
+    }
+    document.getElementById('resumeDone').style.display = 'none';
+    document.getElementById('resumeNone').style.display = 'block';
+    document.getElementById('tierTabs').style.display = 'none';
+    currentTier = '';
+    showToast('Resume removed');
+    fetchJobs();
+  } catch (e) {
+    showToast('Could not remove resume');
+  }
 }
 
 // ---- Drag & Drop ----
@@ -959,6 +1006,7 @@ function renderJobs(jobs, emptyReason) {
 
     const modeClass = (j.work_mode || '').toLowerCase() === 'remote' ? ' remote' : '';
     const salaryTag = j.salary ? `<span class="job-tag tag-salary">${esc(j.salary)}</span>` : '';
+    const expTag = j.experience ? `<span class="job-tag tag-exp">${esc(j.experience)}</span>` : '';
 
     html += `<div class="job-card" onclick="openJobModal(${JSON.stringify(j).replace(/"/g,'&quot;')})">
       <div class="job-body">
@@ -970,6 +1018,7 @@ function renderJobs(jobs, emptyReason) {
           <span class="job-tag tag-type">${esc(j.job_type)}</span>
           <span class="job-tag tag-source"><span class="src-dot" style="background:${j.source_color}"></span> ${esc(j.source)}</span>
           ${salaryTag}
+          ${expTag}
         </div>
         <div class="job-actions" onclick="event.stopPropagation()">
           <a href="${esc(j.url)}" target="_blank" class="btn-apply">Apply Now</a>
@@ -1060,7 +1109,9 @@ function goPage(p) { if (p < 1 || p > totalPages) return; currentPage = p; fetch
 // ---- Stats ----
 async function fetchStats() {
   try {
-    const d = await fetch(`${API_BASE}/api/stats`).then(r => r.json());
+    const r = await fetch(`${API_BASE}/api/stats`, { credentials: 'include' });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
     document.getElementById('statTotal').textContent = d.total.toLocaleString();
     document.getElementById('statSources').textContent = ALL_SOURCES.length;
     const header = document.getElementById('statHeader');
@@ -1072,19 +1123,22 @@ async function fetchStats() {
       header.innerHTML = `Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">${d.total.toLocaleString()}</span> live jobs from <span id="statSources">${ALL_SOURCES.length}</span> sources • updated ${when}${extra}`;
     }
     renderSourceFilters(d.sources || []);
-  } catch(e) {}
+  } catch(e) {
+    renderSourceFilters(null);
+  }
 }
 
 function renderSourceFilters(apiSources) {
   const countBy = {};
   (apiSources || []).forEach(s => { countBy[s.name] = s.count; });
+  const haveCounts = apiSources && apiSources.length > 0;
   const c = document.getElementById('sourceFilters');
   let html = `<div class="src-filter"><input type="checkbox" id="srcAll" ${currentSources.length===0?'checked':''} onchange="clearSources()"> All Sources</div>`;
   if (currentSources.length > 0) {
     html += `<p style="font-size:11px;color:var(--tx3);margin:4px 0 8px;padding-left:4px">Showing ${currentSources.length} source(s) only. Check <strong>All Sources</strong> above to see jobs from every source.</p>`;
   }
   ALL_SOURCES.forEach(s => {
-    const count = countBy[s.name] ?? 0;
+    const count = haveCounts ? (countBy[s.name] ?? 0) : '—';
     const checked = currentSources.includes(s.name) ? 'checked' : '';
     html += `<div class="src-filter">
       <input type="checkbox" data-src="${s.name}" ${checked} onchange="toggleSource('${s.name}')">
