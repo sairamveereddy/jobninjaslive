@@ -303,6 +303,15 @@ async def get_jobs(
                 user_title  = u.resume_title or ""
 
     need_postfilter = bool(category)
+    # Virtual source: "Fortune 100" filters by company name, not Job.source
+    want_fortune100 = False
+    if source and source != "all":
+        src_list0 = [s.strip() for s in source.split(",") if s.strip()]
+        if any(s.lower() in ("fortune 100", "fortune100") for s in src_list0):
+            want_fortune100 = True
+            # Remove virtual source from normal source filtering
+            src_list0 = [s for s in src_list0 if s.lower() not in ("fortune 100", "fortune100")]
+            source = ",".join(src_list0)
 
     def _build_filters():
         f = [Job.expires_at > now]
@@ -384,6 +393,11 @@ async def get_jobs(
 
     if need_postfilter:
         rows = [r for r in rows if _match_category(category, r)]
+        total = len(rows)
+
+    if want_fortune100:
+        from fortune100 import is_fortune100_company
+        rows = [r for r in rows if is_fortune100_company(r.company)]
         total = len(rows)
 
     _exp_vals = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10plus")
