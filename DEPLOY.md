@@ -56,6 +56,29 @@ git push origin main
 - **FindWork source**: FindWork.dev API requires a key. Set `FINDWORK_API_KEY` in Railway (get one at findwork.dev/developers) to enable FindWork jobs. If unset, FindWork is skipped.
 - **Netlify** (frontend): If connected to this repo, it will deploy. Proxies for `/api/*`, `/auth/*`, `/payments/*` are in `frontend/netlify.toml`.
 
+## Vercel + GitLab (frontend)
+
+Your HTML/CSS/JS lives under **`frontend/`**, not the repo root. If **Root Directory** is wrong, Vercel shows **404** because there is no `index.html` at the repository root.
+
+### One-time Vercel project settings
+
+1. Open the project on Vercel → **Settings** → **General**.
+2. **Root Directory** → **Edit** → set to **`frontend`** → Save.
+3. **Build & Deployment**:
+   - **Framework Preset**: **Other** (or “Other” / no framework).
+   - **Build Command**: leave **empty** (static files only).
+   - **Output Directory**: leave **default** / empty (not needed when root is `frontend`).
+4. **Git** → confirm the repo is your **GitLab** repo and branch is **`main`**.
+5. Redeploy: **Deployments** → latest deployment → **⋯** → **Redeploy** (or push a commit).
+
+### What’s in the repo
+
+- **`frontend/vercel.json`** — rewrites `/api/*`, `/auth/*`, `/payments/*`, `/admin/*` to your **Railway** backend (same idea as `frontend/netlify.toml`). If you move the API to AWS later, update the destination URLs in that file.
+
+### After changing Root Directory
+
+Commit and push `frontend/vercel.json`, then redeploy so Vercel picks up the rewrites.
+
 ## Optional: add README
 If you want to commit README changes too:
 ```bash

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://jobninjaslive-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "https://jobninjaslive-production.up.railway.app/auth/:path*"
+    },
+    {
+      "source": "/payments/:path*",
+      "destination": "https://jobninjaslive-production.up.railway.app/payments/:path*"
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "https://jobninjaslive-production.up.railway.app/admin/:path*"
+    }
+  ]
+}
