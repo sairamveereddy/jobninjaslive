@@ -411,7 +411,7 @@ body.nav-open{overflow:hidden}
     <div class="sidebar-label">Sources</div>
   </div>
   <div id="sourceFilters" style="padding:0 4px 8px"></div>
-  <p class="sidebar-hint" style="margin-top:6px;padding:0 4px;font-size:10px;color:var(--tx3);line-height:1.3">Remotive, Greenhouse, The Muse, Jobicy, Arbeitnow, FindWork &amp; MAANG (Meta, Apple, Amazon, Netflix, Google) load via API; LinkedIn, Indeed, Dice, ZipRecruiter, Monster &amp; Glassdoor use browser and may show 0 until enabled.</p>
+  <p class="sidebar-hint" style="margin-top:6px;padding:0 4px;font-size:10px;color:var(--tx3);line-height:1.3">Remotive, Greenhouse, The Muse, Jobicy, Arbeitnow, FindWork &amp; MAANG (Meta, Apple, Amazon, Netflix, Google) load via API; LinkedIn, Indeed, Dice, ZipRecruiter, Monster &amp; Glassdoor use browser and may show 0 until enabled. <strong>Fortune 100</strong> and <strong>H1B Sponsors</strong> filter by employer name across every source.</p>
 
   <div class="sidebar-divider"></div>
 
@@ -458,13 +458,13 @@ body.nav-open{overflow:hidden}
       <!-- Page Header -->
       <div class="page-header">
         <h1>Recommended Jobs</h1>
-        <p id="statHeader">Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">—</span> live jobs from <span id="statSources">12</span> sources</p>
+        <p id="statHeader">Based on your resume profile • <span id="statTotal" class="mono" style="color:var(--g600);font-weight:700">—</span> live jobs from <span id="statSources">15</span> sources</p>
       </div>
 
       <!-- Price banner: hidden when user has paid (1 year access) -->
       <div class="promo-card" id="priceBanner" style="display:flex">
         <div>
-          <h3>Unlock all 14 job sources</h3>
+          <h3>Unlock all 15 job sources</h3>
           <p>$4.99 one-time — valid 1 year</p>
         </div>
         <a href="/checkout.html" class="btn btn-sm">Get access</a>
@@ -599,11 +599,11 @@ body.nav-open{overflow:hidden}
       <div class="authgate-pill"><span class="badge"></span> Live job feed · PRO preview</div>
       <div class="authgate-title">Sign in to unlock the job board</div>
       <div class="authgate-sub">
-        jobNinjas.live searches <strong>14 live job sources</strong> every 5 minutes and keeps only jobs from the last 48 hours.
+        jobNinjas.live searches <strong>15 live job sources</strong> every 5 minutes and keeps only jobs from the last 48 hours.
         Create a free account with Google to see everything matched to your profile.
       </div>
       <div class="authgate-metrics">
-        <div class="authgate-metric">14 sources (Fortune 100, MAANG, LinkedIn, Indeed, …)</div>
+        <div class="authgate-metric">15 sources (H1B Sponsors, Fortune 100, MAANG, LinkedIn, …)</div>
         <div class="authgate-metric">5,000+ active jobs in the last 48h</div>
         <div class="authgate-metric">Smart filters for role, experience, and location</div>
       </div>
@@ -612,7 +612,7 @@ body.nav-open{overflow:hidden}
       <ul class="authgate-list">
         <li><strong>Live jobs only</strong> — stale or expired roles are removed automatically.</li>
         <li><strong>Direct links</strong> to official company job pages (no recruiters or reposts).</li>
-        <li><strong>1‑year access</strong> to all 14 sources when you upgrade to PRO.</li>
+        <li><strong>1‑year access</strong> to all 15 sources when you upgrade to PRO.</li>
       </ul>
       <div class="authgate-cta">
         <button class="btn btn-green" style="width:100%" onclick="window.location.href='/auth/google'">
@@ -635,7 +635,7 @@ let currentPage = 1;
 let currentQ = '';
 let currentLoc = '';
 let currentSources = [];
-// All 14 job board sources (API returns only sources that have jobs; we always show full list)
+// All 15 job board sources (API returns only sources that have jobs; we always show full list)
 const ALL_SOURCES = [
   { name: 'Remotive', color: '#4F46E5' },
   { name: 'Arbeitnow', color: '#0CAA41' },
@@ -644,6 +644,7 @@ const ALL_SOURCES = [
   { name: 'FindWork', color: '#6C1F7A' },
   { name: 'Greenhouse', color: '#24A47F' },
   { name: 'Fortune 100', color: '#F59E0B' },
+  { name: 'H1B Sponsors', color: '#0D9488' },
   { name: 'MAANG', color: '#6366F1' },
   { name: 'LinkedIn', color: '#0A66C2' },
   { name: 'Indeed', color: '#2164F3' },

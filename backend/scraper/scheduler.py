@@ -1,8 +1,8 @@
 """
 jobninjas.live — Job Scrapers (USA Only)
 ────────────────────────────────────────
-API (every 5 min):     Remotive · Arbeitnow · The Muse · Jobicy · FindWork · Greenhouse · MAANG
-Browser (every 5 min): LinkedIn · Indeed · Dice · ZipRecruiter · Monster · Glassdoor
+API (every 5 min):     Remotive · Arbeitnow · The Muse · Jobicy · FindWork (or Remote OK if no API key) · Greenhouse · MAANG
+Browser (every 5 min): LinkedIn · Indeed · Dice · ZipRecruiter · Monster · Glassdoor (up to 3 concurrent fetchers)
 
 MAANG = Meta, Apple, Amazon, Netflix, Google (official career sites; Amazon via API, others via browser).
 All results filtered to USA. Jobs auto-expire after 48 h.
@@ -241,10 +241,65 @@ def _findwork_headers():
     return {**HDR, "Authorization": f"Bearer {key}"}
 
 
+async def _scrape_findwork_remoteok_fallback(http):
+    """
+    Public feed when FINDWORK_API_KEY is unset (FindWork API requires a key).
+    Remote OK ToS: link back and credit Remote OK — job URLs point to remoteok.com.
+    """
+    jobs = []
+    try:
+        async with http.get("https://remoteok.com/api", timeout=TIMEOUT) as r:
+            if r.status != 200:
+                log.warning("[FindWork] Remote OK fallback: HTTP %s", r.status)
+                return jobs
+            data = await r.json(content_type=None)
+        if not isinstance(data, list) or len(data) < 2:
+            return jobs
+        for it in data[1:]:
+            if not isinstance(it, dict):
+                continue
+            title = (it.get("position") or "").strip()
+            company = (it.get("company") or "").strip()
+            loc = (it.get("location") or "Remote").strip() or "Remote"
+            if not is_usa(loc):
+                continue
+            link = (it.get("url") or it.get("apply_url") or "").strip()
+            if not title or not link:
+                continue
+            tags = it.get("tags") if isinstance(it.get("tags"), list) else []
+            sal = ""
+            mn, mx = it.get("salary_min"), it.get("salary_max")
+            if mn is not None and mx is not None:
+                try:
+                    sal = f"${int(mn // 1000)}k-${int(mx // 1000)}k/yr"
+                except (TypeError, ValueError):
+                    pass
+            jobs.append({
+                "id": make_id(title, company, link),
+                "title": title[:299],
+                "company": company[:199],
+                "company_logo": (it.get("company_logo") or it.get("logo") or "")[:499],
+                "location": loc[:299],
+                "salary": sal[:199],
+                "job_type": "Full-time",
+                "work_mode": "Remote",
+                "description": strip_html(it.get("description", "")),
+                "url": link[:999],
+                "source": "FindWork",
+                "source_color": "#6C1F7A",
+                "tags": json.dumps(tags[:8]),
+            })
+    except Exception as e:
+        log.warning(f"[FindWork] Remote OK fallback: {e}")
+    return jobs
+
+
 async def scrape_findwork(http):
     jobs = []
     if not os.environ.get("FINDWORK_API_KEY"):
-        log.info("[FindWork] FINDWORK_API_KEY not set; skipping (API requires key).")
+        log.info("[FindWork] FINDWORK_API_KEY not set; using Remote OK public API fallback.")
+        jobs = await _scrape_findwork_remoteok_fallback(http)
+        log.info(f"[FindWork] {len(jobs)}")
         return jobs
     try:
         headers = _findwork_headers()
@@ -274,6 +329,9 @@ async def scrape_findwork(http):
             await asyncio.sleep(0.2)
     except Exception as e:
         log.warning(f"[FindWork] {e}")
+    if not jobs:
+        log.info("[FindWork] Primary API returned 0; trying Remote OK fallback.")
+        jobs = await _scrape_findwork_remoteok_fallback(http)
     log.info(f"[FindWork] {len(jobs)}")
     return jobs
 
@@ -579,12 +637,16 @@ QUERIES = [
     "operations manager", "graphic designer", "teacher", "supply chain",
 ]
 
+# Browser scrapers: cap queries + pause so LinkedIn→Glassdoor can finish within the 5‑minute job interval.
+BROWSER_QUERIES = QUERIES[:8]
+BROWSER_PAUSE_SEC = 1.5
+
 
 # ── LinkedIn (public job search, no login) ───────────────────────
 
 async def scrape_linkedin():
     jobs = []
-    for q in QUERIES[:12]:
+    for q in BROWSER_QUERIES:
         url = (
             f"https://www.linkedin.com/jobs/search/?"
             f"keywords={q.replace(' ','%20')}&location=United%20States"
@@ -617,7 +679,7 @@ async def scrape_linkedin():
                 })
         except Exception as e:
             log.warning(f"[LinkedIn/{q}] parse: {e}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(BROWSER_PAUSE_SEC)
     log.info(f"[LinkedIn] {len(jobs)}")
     return jobs
 
@@ -626,7 +688,7 @@ async def scrape_linkedin():
 
 async def scrape_indeed():
     jobs = []
-    for q in QUERIES[:12]:
+    for q in BROWSER_QUERIES:
         url = (
             f"https://www.indeed.com/jobs?"
             f"q={q.replace(' ','+')}&l=United+States&sort=date&fromage=3"
@@ -669,7 +731,7 @@ async def scrape_indeed():
                 })
         except Exception as e:
             log.warning(f"[Indeed/{q}] parse: {e}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(BROWSER_PAUSE_SEC)
     log.info(f"[Indeed] {len(jobs)}")
     return jobs
 
@@ -733,7 +795,7 @@ def _parse_dice_cards(page, query):
 
 async def scrape_dice():
     jobs = []
-    for q in QUERIES[:12]:
+    for q in BROWSER_QUERIES:
         url = (
             f"https://www.dice.com/jobs?"
             f"q={q.replace(' ','%20')}&location=United%20States"
@@ -747,7 +809,7 @@ async def scrape_dice():
             jobs.extend(found)
         except Exception as e:
             log.warning(f"[Dice/{q}] {e}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(BROWSER_PAUSE_SEC)
     log.info(f"[Dice] {len(jobs)}")
     return jobs
 
@@ -834,7 +896,7 @@ def _parse_zip_cards(page, query):
 
 async def scrape_ziprecruiter():
     jobs = []
-    for q in QUERIES[:12]:
+    for q in BROWSER_QUERIES:
         url = (
             f"https://www.ziprecruiter.com/jobs-search?"
             f"search={q.replace(' ','+')}&location=United+States"
@@ -847,7 +909,7 @@ async def scrape_ziprecruiter():
             jobs.extend(found)
         except Exception as e:
             log.warning(f"[ZipRecruiter/{q}] {e}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(BROWSER_PAUSE_SEC)
     log.info(f"[ZipRecruiter] {len(jobs)}")
     return jobs
 
@@ -856,7 +918,7 @@ async def scrape_ziprecruiter():
 
 async def scrape_monster():
     jobs = []
-    for q in QUERIES[:12]:
+    for q in BROWSER_QUERIES:
         url = (
             f"https://www.monster.com/jobs/search?"
             f"q={q.replace(' ','+')}&where=United+States&page=1&so=m.h.s"
@@ -894,7 +956,7 @@ async def scrape_monster():
                 })
         except Exception as e:
             log.warning(f"[Monster/{q}] parse: {e}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(BROWSER_PAUSE_SEC)
     log.info(f"[Monster] {len(jobs)}")
     return jobs
 
@@ -903,7 +965,7 @@ async def scrape_monster():
 
 async def scrape_glassdoor():
     jobs = []
-    for q in QUERIES[:12]:
+    for q in BROWSER_QUERIES:
         url = (
             f"https://www.glassdoor.com/Job/jobs.htm?"
             f"sc.keyword={q.replace(' ','+')}&locT=N&locId=1&sortBy=date_desc"
@@ -943,29 +1005,39 @@ async def scrape_glassdoor():
                 })
         except Exception as e:
             log.warning(f"[Glassdoor/{q}] parse: {e}")
-        await asyncio.sleep(3)
+        await asyncio.sleep(BROWSER_PAUSE_SEC)
     log.info(f"[Glassdoor] {len(jobs)}")
     return jobs
 
 
-# ── Browser runner (sequential to save resources) ────────────────
+# ── Browser runner (parallel so the cycle can finish within the 5‑minute interval) ─
 
 async def _run_browser_scrapers():
     if not _browser_available():
         log.info("[Browser] Scrapers skipped (no browser/Scrapling); using API sources only.")
         return []
-    all_jobs = []
     scrapers = [
         scrape_linkedin, scrape_indeed, scrape_dice,
         scrape_ziprecruiter, scrape_monster, scrape_glassdoor,
     ]
-    for fn in scrapers:
-        try:
-            result = await fn()
-            all_jobs.extend(result)
-            log.info(f"[Browser] {fn.__name__} done — {len(result)} jobs")
-        except Exception as e:
-            log.error(f"[Browser] {fn.__name__} crashed: {e}")
+    # Cap concurrent Chromium sessions (StealthyFetcher) so small hosts do not OOM.
+    _sem = asyncio.Semaphore(3)
+
+    async def _guarded(fn):
+        async with _sem:
+            return await fn()
+
+    results = await asyncio.gather(
+        *(_guarded(fn) for fn in scrapers),
+        return_exceptions=True,
+    )
+    all_jobs = []
+    for fn, res in zip(scrapers, results):
+        if isinstance(res, list):
+            all_jobs.extend(res)
+            log.info(f"[Browser] {fn.__name__} done — {len(res)} jobs")
+        else:
+            log.error(f"[Browser] {fn.__name__} crashed: {res}")
     return all_jobs
 
 
@@ -1105,7 +1177,8 @@ def create_scheduler() -> AsyncIOScheduler:
     s.add_job(
         run_scrape_cycle, "interval", minutes=5,
         id="scrape", replace_existing=True,
-        misfire_grace_time=120, max_instances=1,
+        misfire_grace_time=300, max_instances=1,
+        coalesce=True,
     )
     s.add_job(
         run_cert_scrape_cycle, "interval", hours=24,

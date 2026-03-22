@@ -22,10 +22,23 @@ from admin import router as admin_router
 from resume_parser import parse_resume
 from job_matcher import rank_jobs
 from scraper.scheduler import run_scrape_cycle, run_api_only_cycle, create_scheduler
+from h1b_sponsors import is_h1b_virtual_source_filter, is_h1b_sponsor_company
+from fortune100 import is_fortune100_company
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 log = logging.getLogger("jobninjas")
 scheduler = create_scheduler()
+
+
+def _merge_virtual_source_stats(src_rows, companies):
+    """Counts for Fortune 100 / H1B Sponsors (virtual filters — not stored as Job.source)."""
+    by_name = {r[0]: {"name": r[0], "color": r[1], "count": r[2]} for r in src_rows}
+    n_f100 = sum(1 for c in companies if is_fortune100_company(c))
+    n_h1b = sum(1 for c in companies if is_h1b_sponsor_company(c))
+    by_name["Fortune 100"] = {"name": "Fortune 100", "color": "#F59E0B", "count": n_f100}
+    by_name["H1B Sponsors"] = {"name": "H1B Sponsors", "color": "#0D9488", "count": n_h1b}
+    return sorted(by_name.values(), key=lambda x: -x["count"])
+
 
 # When API sees 0 jobs, run seed once so deploy/cold start always recovers
 _seed_on_empty_lock = asyncio.Lock()
@@ -343,15 +356,19 @@ async def get_jobs(
                 user_title  = u.resume_title or ""
 
     need_postfilter = bool(category)
-    # Virtual source: "Fortune 100" filters by company name, not Job.source
+    # Virtual sources filter by company name, not Job.source
     want_fortune100 = False
+    want_h1b_sponsors = False
+
     if source and source != "all":
         src_list0 = [s.strip() for s in source.split(",") if s.strip()]
         if any(s.lower() in ("fortune 100", "fortune100") for s in src_list0):
             want_fortune100 = True
-            # Remove virtual source from normal source filtering
             src_list0 = [s for s in src_list0 if s.lower() not in ("fortune 100", "fortune100")]
-            source = ",".join(src_list0)
+        if any(is_h1b_virtual_source_filter(s) for s in src_list0):
+            want_h1b_sponsors = True
+            src_list0 = [s for s in src_list0 if not is_h1b_virtual_source_filter(s)]
+        source = ",".join(src_list0)
 
     def _build_filters():
         f = [Job.expires_at > now]
@@ -435,9 +452,17 @@ async def get_jobs(
         rows = [r for r in rows if _match_category(category, r)]
         total = len(rows)
 
-    if want_fortune100:
-        from fortune100 import is_fortune100_company
-        rows = [r for r in rows if is_fortune100_company(r.company)]
+    if want_fortune100 or want_h1b_sponsors:
+        def _passes_virtual_company(r):
+            f = is_fortune100_company(r.company) if want_fortune100 else False
+            h = is_h1b_sponsor_company(r.company) if want_h1b_sponsors else False
+            if want_fortune100 and want_h1b_sponsors:
+                return f or h
+            if want_fortune100:
+                return f
+            return h
+
+        rows = [r for r in rows if _passes_virtual_company(r)]
         total = len(rows)
 
     _exp_vals = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10plus")
@@ -469,7 +494,17 @@ async def get_jobs(
 
     # When 0 jobs with no filters, backend may still be seeding (cold start)
     empty_reason = None
-    if total == 0 and not (q or location or (source and source != "all") or mode or jtype or category or experience):
+    if total == 0 and not (
+        q
+        or location
+        or (source and source != "all")
+        or mode
+        or jtype
+        or category
+        or experience
+        or want_fortune100
+        or want_h1b_sponsors
+    ):
         empty_reason = "loading"
 
     return {"total": total, "page": page, "pages": max(1,(total+per-1)//per),
@@ -479,6 +514,7 @@ async def get_jobs(
 @app.get("/api/stats")
 async def get_stats():
     now = datetime.utcnow()
+    recent_cutoff = now - timedelta(minutes=10)
     async with AsyncSessionLocal() as db:
         active_q = Job.expires_at > now
         total  = (await db.execute(select(func.count(Job.id)).where(active_q))).scalar() or 0
@@ -489,7 +525,6 @@ async def get_stats():
             .order_by(func.count(Job.id).desc())
         )).all()
         latest = (await db.execute(select(func.max(Job.scraped_at)).where(active_q))).scalar()
-        recent_cutoff = now - timedelta(minutes=10)
         added_recent = (await db.execute(
             select(func.count(Job.id)).where(and_(active_q, Job.scraped_at >= recent_cutoff))
         )).scalar() or 0
@@ -519,11 +554,17 @@ async def get_stats():
             added_recent = (await db2.execute(
                 select(func.count(Job.id)).where(and_(active_q, Job.scraped_at >= recent_cutoff))
             )).scalar() or 0
+
+    async with AsyncSessionLocal() as db3:
+        active_q = Job.expires_at > now
+        companies = (await db3.execute(select(Job.company).where(active_q))).scalars().all()
+
+    sources = _merge_virtual_source_stats(src, companies)
     return {
         "total": total,
         "remote": remote,
         "remote_pct": round(remote/total*100) if total else 0,
-        "sources": [{"name": r[0], "color": r[1], "count": r[2]} for r in src],
+        "sources": sources,
         "last_updated": (latest or now).isoformat(),
         "added_recent": added_recent,
         "expiry_hours": 48,
