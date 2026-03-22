@@ -411,7 +411,7 @@ body.nav-open{overflow:hidden}
     <div class="sidebar-label">Sources</div>
   </div>
   <div id="sourceFilters" style="padding:0 4px 8px"></div>
-  <p class="sidebar-hint" style="margin-top:6px;padding:0 4px;font-size:10px;color:var(--tx3);line-height:1.3">Remotive, Greenhouse, The Muse, Jobicy, Arbeitnow, FindWork &amp; MAANG (Meta, Apple, Amazon, Netflix, Google) load via API; LinkedIn, Indeed, Dice, ZipRecruiter, Monster &amp; Glassdoor use browser and may show 0 until enabled. <strong>Fortune 100</strong> and <strong>H1B Sponsors</strong> filter by employer name across every source.</p>
+  <p class="sidebar-hint" style="margin-top:6px;padding:0 4px;font-size:10px;color:var(--tx3);line-height:1.3">Remotive, Greenhouse, The Muse, Jobicy, Arbeitnow, FindWork &amp; MAANG (Meta, Apple, Amazon, Netflix, Google) load via API; LinkedIn, Indeed, Dice, ZipRecruiter, Monster &amp; Glassdoor use browser and may show 0 until enabled. <strong>Fortune 100</strong> and <strong>H1B Sponsors</strong> filter by employer name across every source. Counts here are site-wide; search, location, and category filters narrow the job list only.</p>
 
   <div class="sidebar-divider"></div>
 
@@ -544,6 +544,7 @@ body.nav-open{overflow:hidden}
         <span><span id="feedInfo" class="count">Loading jobs...</span></span>
         <span>Next refresh in <span id="countdown" class="mono countdown">5:00</span></span>
       </div>
+      <p id="feedHint" class="feed-hint" style="display:none;font-size:12px;color:var(--tx3);margin:6px 0 10px;line-height:1.4"></p>
 
       <!-- Job List -->
       <div id="jobList"></div>
@@ -832,6 +833,23 @@ function doSearch() {
   fetchJobs();
 }
 
+function clearSearchFilters() {
+  var sq = document.getElementById('searchQ');
+  var sl = document.getElementById('searchLoc');
+  if (sq) sq.value = '';
+  if (sl) sl.value = '';
+  currentQ = '';
+  currentLoc = '';
+  currentCat = '';
+  document.querySelectorAll('.cat-tab').forEach(function(b) { b.classList.toggle('active', b.dataset.cat === ''); });
+  currentMode = '';
+  document.querySelectorAll('#modeFilters .sidebar-btn').forEach(function(b) { b.classList.toggle('active', b.textContent.trim() === 'Any'); });
+  currentExperience = '';
+  updateExpDropdownUI();
+  currentPage = 1;
+  fetchJobs();
+}
+
 function quickRole(q) {
   const input = document.getElementById('searchQ');
   input.value = q;
@@ -916,8 +934,19 @@ function setCat(c) {
 
 function toggleSource(name) {
   const idx = currentSources.indexOf(name);
-  if (idx === -1) currentSources.push(name);
-  else currentSources.splice(idx, 1);
+  if (idx === -1) {
+    currentSources.push(name);
+    if (name === 'H1B Sponsors' || name === 'Fortune 100') {
+      const sq = document.getElementById('searchQ');
+      const sl = document.getElementById('searchLoc');
+      if (sq) sq.value = '';
+      if (sl) sl.value = '';
+      currentQ = '';
+      currentLoc = '';
+    }
+  } else {
+    currentSources.splice(idx, 1);
+  }
   currentPage = 1;
   updateSourceCheckboxes();
   fetchJobs();
@@ -984,6 +1013,22 @@ async function fetchJobs() {
     renderJobs(d.jobs, d.empty_reason);
     renderPagination();
     document.getElementById('feedInfo').textContent = `Showing ${(currentPage-1)*PER_PAGE+1}–${Math.min(currentPage*PER_PAGE, totalJobs)} of ${totalJobs.toLocaleString()} jobs`;
+    const hint = document.getElementById('feedHint');
+    if (hint) {
+      const narrow = [];
+      if (currentQ) narrow.push(`search “${currentQ}”`);
+      if (currentLoc) narrow.push(`location “${currentLoc}”`);
+      if (currentCat) narrow.push('job category');
+      if (currentExperience) narrow.push('experience');
+      if (currentMode) narrow.push('work mode');
+      if (narrow.length) {
+        hint.style.display = 'block';
+        hint.innerHTML = `Sidebar numbers count <strong>all</strong> jobs for each source. The list below is filtered by ${narrow.join(', ')}. <a href="javascript:void(0)" onclick="clearSearchFilters()" style="color:var(--g600);font-weight:600">Clear search &amp; filters</a> to see more.`;
+      } else {
+        hint.style.display = 'none';
+        hint.textContent = '';
+      }
+    }
   } catch(e) {
     list.innerHTML = '<p style="text-align:center;color:var(--tx3);padding:40px">Failed to load jobs. <a href="javascript:location.reload()" style="color:var(--g600)">Refresh the page</a> to try again.</p>';
   }

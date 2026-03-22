@@ -370,13 +370,18 @@ async def get_jobs(
             src_list0 = [s for s in src_list0 if not is_h1b_virtual_source_filter(s)]
         source = ",".join(src_list0)
 
-    def _build_filters():
+    # Virtual + real sources: sidebar counts are OR (e.g. Greenhouse jobs OR H1B employers anywhere),
+    # not AND (which would only show Greenhouse rows that are also H1B-list companies).
+    has_real_sources = bool(source and source != "all")
+    virtual_and_real = (want_fortune100 or want_h1b_sponsors) and has_real_sources
+
+    def _build_filters(include_source: bool = True):
         f = [Job.expires_at > now]
         if q:
             f.append(or_(Job.title.ilike(f"%{q}%"), Job.company.ilike(f"%{q}%")))
         if location:
             f.append(Job.location.ilike(f"%{location}%"))
-        if source and source != "all":
+        if include_source and source and source != "all":
             src_list = [s.strip() for s in source.split(",") if s.strip()]
             if len(src_list) == 1:
                 f.append(Job.source.ilike(f"%{src_list[0]}%"))
@@ -394,7 +399,28 @@ async def get_jobs(
             f.append(or_(Job.job_type == "Internship", Job.title.ilike("%intern%")))
         return f
 
-    filters = _build_filters()
+    filters = _build_filters(include_source=True)
+    filters_no_source = _build_filters(include_source=False)
+
+    # With no search query, constrain by company in SQL so we return every H1B/Fortune row (not top-N then filter).
+    filters_query = filters
+    filters_no_src_query = filters_no_source
+    use_coarse_company_sql = (want_fortune100 or want_h1b_sponsors) and not (q or "").strip()
+    if use_coarse_company_sql:
+        from sqlalchemy import or_ as sa_or_sql
+        from h1b_sponsors import h1b_company_sql_or
+        from fortune100 import fortune100_company_sql_or
+
+        _vc_parts = []
+        if want_h1b_sponsors:
+            _vc_parts.append(h1b_company_sql_or(Job))
+        if want_fortune100:
+            _vc_parts.append(fortune100_company_sql_or(Job))
+        if _vc_parts:
+            _vc = sa_or_sql(*_vc_parts) if len(_vc_parts) > 1 else _vc_parts[0]
+            filters_query = list(filters) + [_vc]
+            filters_no_src_query = list(filters_no_source) + [_vc]
+
     if category == "full-time":
         need_postfilter = False
     elif category == "contract":
@@ -402,16 +428,58 @@ async def get_jobs(
     elif category == "internship":
         need_postfilter = False
 
-    async with AsyncSessionLocal() as db:
-        total = (await db.execute(
-            select(func.count(Job.id)).where(and_(*filters))
-        )).scalar() or 0
+    def _passes_virtual_company(r):
+        f = is_fortune100_company(r.company) if want_fortune100 else False
+        h = is_h1b_sponsor_company(r.company) if want_h1b_sponsors else False
+        if want_fortune100 and want_h1b_sponsors:
+            return f or h
+        if want_fortune100:
+            return f
+        return h
 
-        rows = (await db.execute(
-            select(Job).where(and_(*filters))
+    async def _load_rows(db):
+        """Return (rows, total_hint) for the current filters."""
+        _merge_lim = 8000
+
+        if virtual_and_real:
+            rows_a = (
+                await db.execute(
+                    select(Job)
+                    .where(and_(*filters))
+                    .order_by(Job.scraped_at.desc())
+                    .limit(_merge_lim)
+                )
+            ).scalars().all()
+            b_stmt = (
+                select(Job)
+                .where(and_(*filters_no_src_query))
+                .order_by(Job.scraped_at.desc())
+            )
+            if not use_coarse_company_sql:
+                b_stmt = b_stmt.limit(_merge_lim)
+            rows_b = (await db.execute(b_stmt)).scalars().all()
+            rows_b = [r for r in rows_b if _passes_virtual_company(r)]
+            by_id = {r.id: r for r in rows_a}
+            for r in rows_b:
+                if r.id not in by_id:
+                    by_id[r.id] = r
+            merged = sorted(by_id.values(), key=lambda r: r.scraped_at, reverse=True)
+            return merged, len(merged)
+        total_ct = (
+            await db.execute(select(func.count(Job.id)).where(and_(*filters_query)))
+        ).scalar() or 0
+        stmt = (
+            select(Job)
+            .where(and_(*filters_query))
             .order_by(Job.scraped_at.desc())
-            .limit(3000)
-        )).scalars().all()
+        )
+        if not use_coarse_company_sql:
+            stmt = stmt.limit(3000)
+        rows0 = (await db.execute(stmt)).scalars().all()
+        return rows0, total_ct
+
+    async with AsyncSessionLocal() as db:
+        rows, total = await _load_rows(db)
 
     # If DB is empty (e.g. cold start), run full API-only cycle once so all 6 API sources get jobs
     did_seed = False
@@ -439,29 +507,13 @@ async def get_jobs(
                     did_seed = True
         if did_seed:
             async with AsyncSessionLocal() as db2:
-                total = (await db2.execute(
-                    select(func.count(Job.id)).where(and_(*filters))
-                )).scalar() or 0
-                rows = (await db2.execute(
-                    select(Job).where(and_(*filters))
-                    .order_by(Job.scraped_at.desc())
-                    .limit(3000)
-                )).scalars().all()
+                rows, total = await _load_rows(db2)
 
     if need_postfilter:
         rows = [r for r in rows if _match_category(category, r)]
         total = len(rows)
 
-    if want_fortune100 or want_h1b_sponsors:
-        def _passes_virtual_company(r):
-            f = is_fortune100_company(r.company) if want_fortune100 else False
-            h = is_h1b_sponsor_company(r.company) if want_h1b_sponsors else False
-            if want_fortune100 and want_h1b_sponsors:
-                return f or h
-            if want_fortune100:
-                return f
-            return h
-
+    if (want_fortune100 or want_h1b_sponsors) and not virtual_and_real:
         rows = [r for r in rows if _passes_virtual_company(r)]
         total = len(rows)
 

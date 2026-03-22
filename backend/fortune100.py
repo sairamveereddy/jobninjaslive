@@ -1,5 +1,7 @@
 import re
 
+from sqlalchemy import or_ as sa_or
+
 # Fortune 100 (USA) company names (ranked by revenue).
 # Source: extracted from public Fortune 1000 list (top 100).
 FORTUNE100_COMPANIES = [
@@ -117,6 +119,22 @@ def _norm_company_name(s: str) -> str:
 
 
 _FORTUNE100_NORM = {_norm_company_name(x) for x in FORTUNE100_COMPANIES}
+
+
+def fortune100_company_sql_or(Job):
+    """SQL OR(Job.company ILIKE ...) for coarse prefilter when no text search is applied."""
+    seen = set()
+    clauses = []
+    for name in FORTUNE100_COMPANIES:
+        n = name.strip()
+        if len(n) < 2:
+            continue
+        key = n.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        clauses.append(Job.company.ilike(f"%{n}%"))
+    return sa_or(*clauses)
 
 
 def is_fortune100_company(company: str) -> bool:

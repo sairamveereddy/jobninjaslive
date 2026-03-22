@@ -1,5 +1,7 @@
 import re
 
+from sqlalchemy import or_ as sa_or
+
 # Sidebar / API filter label (must match frontend ALL_SOURCES name).
 H1B_VIRTUAL_SOURCE_NAMES = frozenset(
     {
@@ -97,6 +99,25 @@ def _norm_company_name(s: str) -> str:
 
 _ALL_NAMES = list(H1B_SPONSOR_COMPANIES) + list(H1B_SPONSOR_ALIASES)
 _H1B_NORM = {_norm_company_name(x) for x in _ALL_NAMES}
+
+
+def h1b_company_sql_or(Job):
+    """
+    SQL OR(Job.company ILIKE ...) for coarse prefilter when no text search is applied.
+    Keeps results aligned with sidebar counts (all H1B sponsor rows, not a capped window).
+    """
+    seen = set()
+    clauses = []
+    for name in H1B_SPONSOR_COMPANIES + H1B_SPONSOR_ALIASES:
+        n = name.strip()
+        if len(n) < 2:
+            continue
+        key = n.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        clauses.append(Job.company.ilike(f"%{n}%"))
+    return sa_or(*clauses)
 
 
 def is_h1b_sponsor_company(company: str) -> bool:
