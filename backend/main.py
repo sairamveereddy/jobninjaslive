@@ -129,26 +129,25 @@ async def seed_remotive_jobs() -> int:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    # 1) Seed Remotive (fast, guarantees some jobs)
-    try:
-        n = await asyncio.wait_for(seed_remotive_jobs(), timeout=45.0)
-        if n:
-            log.info("Seed finished: %s jobs in DB.", n)
-    except Exception as e:
-        log.warning("Seed failed: %s", e)
-    # 2) API-only cycle: all 6 API sources (Arbeitnow, The Muse, Jobicy, FindWork, Greenhouse + Remotive)
-    try:
-        log.info("Running API-only scrape (all 6 API sources)...")
-        n = await asyncio.wait_for(run_api_only_cycle(), timeout=120.0)
-        log.info("API-only scrape finished: %s new/refreshed jobs.", n)
-    except asyncio.TimeoutError:
-        log.warning("API-only scrape timed out after 120s.")
-    except Exception as e:
-        log.exception("API-only scrape failed: %s", e)
-    # 3) Start scheduler (full cycle every 5 min, includes browser sources)
     scheduler.start()
-    # 4) Run one full cycle in background (LinkedIn, Indeed, Dice, etc. — needs Chromium/Docker)
-    async def _first_full_cycle():
+    # Do not block startup: Railway health checks must get HTTP before ~60s or the deploy fails
+    # ("Application failed to respond"). Seed + scrapes run after the server is listening.
+
+    async def _background_startup():
+        try:
+            n = await asyncio.wait_for(seed_remotive_jobs(), timeout=45.0)
+            if n:
+                log.info("Seed finished: %s jobs in DB.", n)
+        except Exception as e:
+            log.warning("Seed failed: %s", e)
+        try:
+            log.info("Running API-only scrape (all API sources)...")
+            n = await asyncio.wait_for(run_api_only_cycle(), timeout=120.0)
+            log.info("API-only scrape finished: %s new/refreshed jobs.", n)
+        except asyncio.TimeoutError:
+            log.warning("API-only scrape timed out after 120s.")
+        except Exception as e:
+            log.exception("API-only scrape failed: %s", e)
         try:
             log.info("Running first full scrape (API + browser) in background...")
             await asyncio.wait_for(run_scrape_cycle(), timeout=600.0)
@@ -156,7 +155,8 @@ async def lifespan(app: FastAPI):
             log.warning("First full scrape timed out; scheduler will retry every 5 min.")
         except Exception as e:
             log.warning("First full scrape failed: %s; scheduler will retry.", e)
-    asyncio.create_task(_first_full_cycle())
+
+    asyncio.create_task(_background_startup())
     yield
     scheduler.shutdown()
 
